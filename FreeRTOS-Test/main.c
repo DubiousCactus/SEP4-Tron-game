@@ -117,8 +117,38 @@ void game_processing(void *pvParameters)
 				}
 			}
 		}
-	}
 
+		/* Move players in their current direction */
+		switch (playerOne.direction) {
+			case LEFT:
+				playerOne.x--;
+				break;
+			case RIGHT:
+				playerOne.x++;
+				break;
+			case UP:
+				playerOne.y--;
+				break;
+			case DOWN:
+				playerOne.y++;
+				break;
+		}
+
+		switch (playerTwo.direction) {
+			case LEFT:
+				playerTwo.x--;
+				break;
+			case RIGHT:
+				playerTwo.x++;
+				break;
+			case UP:
+				playerTwo.y--;
+				break;
+			case DOWN:
+				playerTwo.y++;
+				break;
+		}
+	}
 }
 
 void communicate_serial(void *pvParameters)
