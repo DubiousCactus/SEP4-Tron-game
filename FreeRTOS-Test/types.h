@@ -11,7 +11,7 @@ typedef struct Position {
 	int x;
 	int y;
 	enum Direction direction;
-	Turn turns[];
+	Turn turns[1];
 } Position;
 
 typedef struct Score {
