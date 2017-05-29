@@ -33,9 +33,17 @@ static Position playerOne, playerTwo;
 static Score score;
 
 
-void refresh_screen(void *pvParameters)
+void make_frame(void *pvParameters)
 {
 	/* Create frame from gameState */
+	for (int i = 0; i < 14; i++) { //For each column
+		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+			if (gameState[i][j] != 0) { //Add up
+				frame_buffer[i]	+= pow(2, j);
+			}
+		}
+	}
+
 }
 
 
@@ -157,7 +165,7 @@ void handle_display(void)
 	if (col == 0)
 		prepare_shiftregister();
 	
-	load_col_value(frame_buf[col]);
+	load_col_value(frame_buffer[col]);
 	
 	clock_shift_register_and_prepare_for_next_col();
 	
