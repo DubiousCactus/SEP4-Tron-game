@@ -25,19 +25,22 @@
 static const uint8_t _COM_RX_QUEUE_LENGTH = 30;
 
 static QueueHandle_t _received_chars_queue = NULL;
-static SemaphoreHandle_t  xMutexReceivedData = NULL;
 
 // frame_buffer contains a bit pattern for each column in the display
 static uint16_t frame_buffer[14] = {0};
 
+//Shared variables
 static int gameState[14][10] = {{0}};
 static Position playerOne, playerTwo;
-static Score score;
+static uint8_t gameOver = 0;
 
-
+//Semaphores for the shared variables
+static SemaphoreHandle_t xGameStateSemaphore = NULL;
+static SemaphoreHandle_t xPlayerOneSemaphore = NULL;
+static SemaphoreHandle_t xPlayerTwoSemaphore = NULL;
 static SemaphoreHandle_t  xGameOverSemaphore = NULL;
-static uint8_t game_over = 0;
 
+static Score score;
 
 bool correct_arrow_key(char data_received[])
 {
@@ -72,23 +75,22 @@ void communicate_serial(void *pvParameters)
 			//Received data from pc - check if it's a correct arrow key
 			if (correct_arrow_key(&data) == true){
 				switch (data[0]) {
-				case 0x41 : return true;	//A
-				case 0x61 : return true;	//a
-				case 0x57 : return true;	//W
-				case 0x77 : return true;	//w
-				case 0x44 : return true;	//D
-				case 0x64 : return true;	//d
-				case 0x53 : return true;	//S
-				case 0x73 : return true;	//s
-				default  : return false;
-				//Move the avatar according!
+				case 0x41 : turn_player(playerTwo, Direction.LEFT);		//A
+				case 0x61 : turn_player(playerTwo, Direction.LEFT);		//a
+				case 0x57 : turn_player(playerTwo, Direction.UP);		//W
+				case 0x77 : turn_player(playerTwo, Direction.UP);		//w
+				case 0x44 : turn_player(playerTwo, Direction.RIGHT);	//D
+				case 0x64 : turn_player(playerTwo, Direction.RIGHT);	//d
+				case 0x53 : turn_player(playerTwo, Direction.DOWN);		//S
+				case 0x73 : turn_player(playerTwo, Direction.DOWN);		//s
+				default  : 
 			}
 		}
 
 		/*Constantly checking if game is over*/
 		if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
 			/*Sending data to the PC when score is changed*/
-			if (game_over == true) {
+			if (gameOver == true) {
 				com_send_bytes((uint8_t *)"GAME OVER\n", 10);
 			}
 			xSemaphoreGive(xGameOverSemaphore);
@@ -136,7 +138,7 @@ void game_processing(void *pvParameters)
 				for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
 					if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
 						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							game_over = 1;
+							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
 					} else {
@@ -149,10 +151,10 @@ void game_processing(void *pvParameters)
 				for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
 					if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
 						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							game_over = 1;
+							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
-					} else
+					} else {
 						gameState[j][playerOne.turns[0].y] = 1;
 					}
 				}
@@ -166,11 +168,11 @@ void game_processing(void *pvParameters)
 					//Turn on LEDs for this line
 					for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
 						if (gameState[playerOne.turns[i].x][j] == 2) { //Collision with player two !!
-							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								game_over = 1;
+							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)) {
+								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else
+						} else {
 							gameState[playerOne.turns[i].x][j] = 1;
 						}
 					}
@@ -180,10 +182,10 @@ void game_processing(void *pvParameters)
 					for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
 						if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
 							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								game_over = 1;
+								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else
+						} else {
 							gameState[j][playerOne.turns[i].y] = 1;
 						}
 					}
@@ -205,7 +207,7 @@ void game_processing(void *pvParameters)
 				for (int j = playerTwo.y; j <= playerTwo.turns[0].y; j++) {
 					if (gameState[playerTwo.turns[0].x][j] == 2) { //Collision with player two !!
 						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							game_over = 1;
+							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
 					} else {
@@ -218,7 +220,7 @@ void game_processing(void *pvParameters)
 				for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
 					if (gameState[j][playerTwo.turns[0].y] == 2) { //Collision with player two !!
 						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							game_over = 1;
+							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
 					} else {
@@ -236,7 +238,7 @@ void game_processing(void *pvParameters)
 					for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
 						if (gameState[playerTwo.turns[i].x][j] == 2) { //Collision with player one !!
 							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								game_over = 1;
+								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
 						} else {
@@ -249,7 +251,7 @@ void game_processing(void *pvParameters)
 					for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
 						if (gameState[j][playerTwo.turns[i].y] == 2) { //Collision with player one !!
 							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								game_over = 1;
+								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
 						} else {
@@ -295,6 +297,8 @@ void game_processing(void *pvParameters)
 
 void read_joystick(void *pvParameters)
 {
+	uint8_t debounceCounter = 0;
+	uint8_t debounceThreshold = 5;
 
 	while (1) {
 		/*Constantly checking joystick state*/
@@ -305,33 +309,59 @@ void read_joystick(void *pvParameters)
 		uint8_t Down	= PINC>>0 & 0x01;
 		uint8_t Pushed  = PIND>>3 & 0x01;
 		
-
-		//Debounce with counter
 		//Down
 		if (Down == 0){
-			com_send_bytes((uint8_t *)"Down\n", 5);
-			turn_player(playerOne, Direction.DOWN);
+			debounceCounter += 1;
+			if (debounceCounter == debounceThreshold) {
+				com_send_bytes((uint8_t *)"Down\n", 5);
+				turn_player(playerOne, Direction.DOWN);
+			} else {
+				debounceCounter = 0;
+			}
 
 			//Right
 			} else if (Right == 0) {
-			com_send_bytes((uint8_t *)"Right\n", 6);
-			turn_player(playerOne, Direction.RIGHT);
+				debounceCounter += 1;
+				if (debounceCounter == debounceThreshold) {
+					com_send_bytes((uint8_t *)"Right\n", 6);
+					turn_player(playerOne, Direction.RIGHT);
+				} else {
+					debounceCounter = 0;
+				}
 			
 			//Up
 			} else if (Up == 0) {
-			com_send_bytes((uint8_t *)"Up\n", 3);
-			turn_player(playerOne, Direction.UP);
+				debounceCounter += 1;
+				if (debounceCounter == debounceThreshold){
+					com_send_bytes((uint8_t *)"Up\n", 3);
+					turn_player(playerOne, Direction.UP);
+				} else {
+				debounceCounter = 0;
+				}
 
 			//Left
 			} else if (Left == 0) {
-			com_send_bytes((uint8_t *)"Left\n", 5);
-			turn_player(playerOne, Direction.LEFT);
+				debounceCounter += 1;
+				if (debounceCounter == debounceThreshold){
+					com_send_bytes((uint8_t *)"Left\n", 5);
+					turn_player(playerOne, Direction.LEFT);
+				} else {
+					debounceCounter = 0;
+				}
 			
 			//Push
 			} else if (Pushed == 0) {
-			com_send_bytes((uint8_t *)"Pause\n", 6);
+				debounceCounter += 1;
+				if (debounceCounter == debounceThreshold){
+					com_send_bytes((uint8_t *)"Pause\n", 6);
+					//Pause game!
+				} else {
+					debounceCounter = 0;
+				}
 
 			} else {
+
+			}
 
 		}
 	}
@@ -426,6 +456,9 @@ int main(void)
 	PORTD &= ~_BV(PORTD6);
 
 	/* Semaphores creation */
+	xGameStateSemaphore = xSemaphoreCreateMutex();
+	xPlayerOneSemaphore = xSemaphoreCreateMutex();
+	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
 	xGameOverSemaphore = xSemaphoreCreateMutex();
 
 	xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
