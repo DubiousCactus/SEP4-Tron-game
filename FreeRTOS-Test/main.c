@@ -199,6 +199,7 @@ void game_processing(void *pvParameters)
 	}
 }
 
+/* Validate keys */
 bool correct_arrow_key(char data_received[])
 {
 	switch (data_received[0])
@@ -216,6 +217,7 @@ bool correct_arrow_key(char data_received[])
 	}
 }
 
+/* Read from serial and turn player two */
 void communicate_serial(void *pvParameters)
 {
 	
@@ -238,6 +240,7 @@ void communicate_serial(void *pvParameters)
 
 }
 
+/* Read from the joystick and turn player one */
 void read_joystick(void *pvParameters)
 {
 
@@ -279,6 +282,7 @@ void read_joystick(void *pvParameters)
 	}
 }
 
+/* Changes the player's direction: will be applied in game_processing() */
 void turn_player(Position player, Direction direction)
 {
 
