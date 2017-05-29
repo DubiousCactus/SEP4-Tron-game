@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
+#include <stdbool.h>
 
 #include "src/board/board.h"
 
@@ -32,6 +34,7 @@ static int gameState[14][10] = {{0}};
 static Position playerOne, playerTwo;
 static Score score;
 
+<<<<<<< HEAD
 //
 //void make_frame(void *pvParameters)
 //{
@@ -151,6 +154,176 @@ void communicate_serial(void *pvParameters)
 			}
 		}
 	}
+=======
+
+/* TODO: protect frame_buffer with a mutex */
+void make_frame(void *pvParameters)
+{
+	/* Create frame from gameState */
+	for (int i = 0; i < 14; i++) { //For each column
+		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+			if (gameState[i][j] != 0) { //Add up
+				frame_buffer[i]	+= pow(2, j);
+			}
+		}
+	}
+}
+
+
+/* TODO: protect gameState with a mutex */
+void game_processing(void *pvParameters)
+{
+	/* Populate gameState from the players' positions and tracks:
+ 	 * Start at turn[i] to compare with turn[i - 1] for each player
+	 */
+
+	bool collision = false;
+
+	while(!collision) {
+		
+		/* Erase player one */
+		for (int i = 0; i < 14; i++)
+			for (int j = 0; j < 10; j++)
+				if (gameState[i][j] == 1)
+					gameState[i][j] = 0;
+
+		if (sizeof(playerOne.turns) < 2) { //Didn't turn yet !
+
+			if (playerOne.x == playerOne.turns[0].x) { //Vertical line
+
+				//Turn on LEDs for this line
+				for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
+					if (gameState[playerOne.turns[0].x][j] == 2) //Collision with player two !!
+						collision = true;
+					else
+						gameState[playerOne.turns[0].x][j] = 1;
+				}
+
+			} else { //Horizontal line
+				
+				for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
+					if (gameState[j][playerOne.turns[0].y] == 2) //Collision with player two !!
+						collision = true;
+					else
+						gameState[j][playerOne.turns[0].y] = 1;
+				}
+			}
+		} else {
+
+			/* Draw player one and check collisions with player two */
+			for (int i = 1; i < sizeof(playerOne.turns); i++) {
+				if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
+
+					//Turn on LEDs for this line
+					for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
+						if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player two !!
+							collision = true;
+						else
+							gameState[playerOne.turns[i].x][j] = 1;
+					}
+
+				} else { //Horizontal line
+					
+					for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
+						if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player two !!
+							collision = true;
+						else
+							gameState[j][playerOne.turns[i].y] = 1;
+					}
+				}
+			}
+		}
+
+		/* Erase player two */
+		for (int i = 0; i < 14; i++)
+			for (int j = 0; j < 10; j++)
+				if (gameState[i][j] == 2)
+					gameState[i][j] = 0;
+
+		if (sizeof(playerTwo.turns) < 2) { //Didn't turn yet !
+
+			if (playerTwo.x == playerTwo.turns[0].x) { //Vertical line
+
+				//Turn on LEDs for this line
+				for (int j = playerTwo.y; j <= playerTwo.turns[0].y; j++) {
+					if (gameState[playerTwo.turns[0].x][j] == 2) //Collision with player two !!
+						collision = true;
+					else
+						gameState[playerTwo.turns[0].x][j] = 1;
+				}
+
+			} else { //Horizontal line
+				
+				for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
+					if (gameState[j][playerTwo.turns[0].y] == 2) //Collision with player two !!
+						collision = true;
+					else
+						gameState[j][playerTwo.turns[0].y] = 1;
+				}
+			}
+		} else {
+
+			/* Draw player two and check collisions with player one */
+			for (int i = 1; i < sizeof(playerTwo.turns); i++) {
+				if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
+
+					//Turn on LEDs for this line
+					for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
+						if (gameState[playerTwo.turns[i].x][j] == 2) //Collision with player one !!
+							collision = true;
+						else
+							gameState[playerTwo.turns[i].x][j] = 1;
+					}
+
+				} else { //Horizontal line
+					
+					for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
+						if (gameState[j][playerTwo.turns[i].y] == 2) //Collision with player one !!
+							collision = true;
+						else
+							gameState[j][playerTwo.turns[i].y] = 1;
+					}
+				}
+			}
+		}
+
+		/* Move players in their current direction */
+		switch (playerOne.direction) {
+			case LEFT:
+				playerOne.x--;
+				break;
+			case RIGHT:
+				playerOne.x++;
+				break;
+			case UP:
+				playerOne.y--;
+				break;
+			case DOWN:
+				playerOne.y++;
+				break;
+		}
+
+		switch (playerTwo.direction) {
+			case LEFT:
+				playerTwo.x--;
+				break;
+			case RIGHT:
+				playerTwo.x++;
+				break;
+			case UP:
+				playerTwo.y--;
+				break;
+			case DOWN:
+				playerTwo.y++;
+				break;
+		}
+	}
+}
+
+void communicate_serial(void *pvParameters)
+{
+
+>>>>>>> 7011665c64b2f9566ab956f43bfe36b82358c25b
 }
 
 void read_joystick(void *pvParameters)
