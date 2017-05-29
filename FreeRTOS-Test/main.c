@@ -28,11 +28,12 @@ static SemaphoreHandle_t  xMutexReceivedData = NULL;
 // frame_buffer contains a bit pattern for each column in the display
 static uint16_t frame_buffer[14] = {0};
 
-static int gameState[14[10] = { {0} };
+static int gameState[14][10] = {{0}};
 static Position playerOne, playerTwo;
 static Score score;
 
 
+/* TODO: protect frame_buffer with a mutex */
 void make_frame(void *pvParameters)
 {
 	/* Create frame from gameState */
@@ -43,10 +44,10 @@ void make_frame(void *pvParameters)
 			}
 		}
 	}
-
 }
 
 
+/* TODO: protect gameState with a mutex */
 void game_processing(void *pvParameters)
 {
 	/* Populate gameState from the players' positions and tracks:
