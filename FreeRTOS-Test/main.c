@@ -115,8 +115,8 @@ void make_frame(void *pvParameters)
 void game_processing(void *pvParameters)
 {
 	/* Populate gameState from the players' positions and tracks:
-	* Start at turn[i] to compare with turn[i - 1] for each player
-	*/
+ 	 * Start at turn[i] to compare with turn[i - 1] for each player
+	 */
 
 	bool collision = false;
 
@@ -124,9 +124,9 @@ void game_processing(void *pvParameters)
 		
 		/* Erase player one */
 		for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-		if (gameState[i][j] == 1)
-		gameState[i][j] = 0;
+			for (int j = 0; j < 10; j++)
+				if (gameState[i][j] == 1)
+					gameState[i][j] = 0;
 
 		if (sizeof(playerOne.turns) < 2) { //Didn't turn yet !
 
@@ -134,32 +134,22 @@ void game_processing(void *pvParameters)
 
 				//Turn on LEDs for this line
 				for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
-					if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
-
-						if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)){
-							game_over = true;
-						}
-						xSemaphoreGive(xGameOverSemaphore);
-						} else {
+					if (gameState[playerOne.turns[0].x][j] == 2) //Collision with player two !!
+						collision = true;
+					else
 						gameState[playerOne.turns[0].x][j] = 1;
-					}
 				}
 
-				} else { //Horizontal line
+			} else { //Horizontal line
 				
 				for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
-					if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
-
-						if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
-							game_over = true;
-						}
-						xSemaphoreGive(xGameOverSemaphore);
-						} else {
+					if (gameState[j][playerOne.turns[0].y] == 2) //Collision with player two !!
+						collision = true;
+					else
 						gameState[j][playerOne.turns[0].y] = 1;
-					}
 				}
 			}
-			} else {
+		} else {
 
 			/* Draw player one and check collisions with player two */
 			for (int i = 1; i < sizeof(playerOne.turns); i++) {
@@ -167,25 +157,19 @@ void game_processing(void *pvParameters)
 
 					//Turn on LEDs for this line
 					for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
-						if (gameState[playerOne.turns[i].x][j] == 2) { //Collision with player two !
-							if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
-								game_over = true;
-							}
-							xSemaphoreGive(xGameOverSemaphore);
-							} else {
+						if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player two !!
+							collision = true;
+						else
 							gameState[playerOne.turns[i].x][j] = 1;
-						}
 					}
 
-					} else { //Horizontal line
+				} else { //Horizontal line
 					
 					for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
-						if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
-							if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
-							game_over = true;							}
-							} else {
+						if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player two !!
+							collision = true;
+						else
 							gameState[j][playerOne.turns[i].y] = 1;
-						}
 					}
 				}
 			}
@@ -193,9 +177,9 @@ void game_processing(void *pvParameters)
 
 		/* Erase player two */
 		for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-		if (gameState[i][j] == 2)
-		gameState[i][j] = 0;
+			for (int j = 0; j < 10; j++)
+				if (gameState[i][j] == 2)
+					gameState[i][j] = 0;
 
 		if (sizeof(playerTwo.turns) < 2) { //Didn't turn yet !
 
@@ -204,21 +188,21 @@ void game_processing(void *pvParameters)
 				//Turn on LEDs for this line
 				for (int j = playerTwo.y; j <= playerTwo.turns[0].y; j++) {
 					if (gameState[playerTwo.turns[0].x][j] == 2) //Collision with player two !!
-					collision = true;
+						collision = true;
 					else
-					gameState[playerTwo.turns[0].x][j] = 1;
+						gameState[playerTwo.turns[0].x][j] = 1;
 				}
 
-				} else { //Horizontal line
+			} else { //Horizontal line
 				
 				for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
 					if (gameState[j][playerTwo.turns[0].y] == 2) //Collision with player two !!
-					collision = true;
+						collision = true;
 					else
-					gameState[j][playerTwo.turns[0].y] = 1;
+						gameState[j][playerTwo.turns[0].y] = 1;
 				}
 			}
-			} else {
+		} else {
 
 			/* Draw player two and check collisions with player one */
 			for (int i = 1; i < sizeof(playerTwo.turns); i++) {
@@ -227,18 +211,18 @@ void game_processing(void *pvParameters)
 					//Turn on LEDs for this line
 					for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
 						if (gameState[playerTwo.turns[i].x][j] == 2) //Collision with player one !!
-						collision = true;
+							collision = true;
 						else
-						gameState[playerTwo.turns[i].x][j] = 1;
+							gameState[playerTwo.turns[i].x][j] = 1;
 					}
 
-					} else { //Horizontal line
+				} else { //Horizontal line
 					
 					for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
 						if (gameState[j][playerTwo.turns[i].y] == 2) //Collision with player one !!
-						collision = true;
+							collision = true;
 						else
-						gameState[j][playerTwo.turns[i].y] = 1;
+							gameState[j][playerTwo.turns[i].y] = 1;
 					}
 				}
 			}
@@ -247,32 +231,32 @@ void game_processing(void *pvParameters)
 		/* Move players in their current direction */
 		switch (playerOne.direction) {
 			case LEFT:
-			playerOne.x--;
-			break;
+				playerOne.x--;
+				break;
 			case RIGHT:
-			playerOne.x++;
-			break;
+				playerOne.x++;
+				break;
 			case UP:
-			playerOne.y--;
-			break;
+				playerOne.y--;
+				break;
 			case DOWN:
-			playerOne.y++;
-			break;
+				playerOne.y++;
+				break;
 		}
 
 		switch (playerTwo.direction) {
 			case LEFT:
-			playerTwo.x--;
-			break;
+				playerTwo.x--;
+				break;
 			case RIGHT:
-			playerTwo.x++;
-			break;
+				playerTwo.x++;
+				break;
 			case UP:
-			playerTwo.y--;
-			break;
+				playerTwo.y--;
+				break;
 			case DOWN:
-			playerTwo.y++;
-			break;
+				playerTwo.y++;
+				break;
 		}
 	}
 }
@@ -312,6 +296,30 @@ void read_joystick(void *pvParameters)
 			} else {
 
 		}
+	}
+}
+
+/* Changes the player's direction: will be applied in game_processing() */
+void turn_player(Position player, Direction direction)
+{
+
+	switch (direction) {
+		case UP:
+			if (player.direction == Direction.LEFT || player.direction == Direction.RIGHT)
+				player.direction = direction;
+			break;
+		case DOWN:
+			if (player.direction == Direction.LEFT || player.direction == Direction.RIGHT)
+				player.direction = direction;
+			break;
+		case LEFT:
+			if (player.direction == Direction.UP || player.direction == Direction.DOWN)
+				player.direction = direction;
+			break;
+		case RIGHT:
+			if (player.direction == Direction.UP || player.direction == Direction.DOWN)
+				player.direction = direction;
+			break;
 	}
 }
 
@@ -361,6 +369,7 @@ void handle_display(void)
 	
 	// count column up - prepare for next
 	if (col++ > 13)
+		col = 0;
 	col = 0;
 }
 
