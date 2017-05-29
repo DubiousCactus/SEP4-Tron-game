@@ -71,7 +71,7 @@ void communicate_serial(void *pvParameters)
 
 			//Received data from pc - check if it's a correct arrow key
 			if (correct_arrow_key(&data) == true){
-				switch (data):
+				switch (data[0]) {
 				case 0x41 : return true;	//A
 				case 0x61 : return true;	//a
 				case 0x57 : return true;	//W
