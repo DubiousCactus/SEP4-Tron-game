@@ -2,14 +2,14 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-// FfreeRTOS Includes
+// FreeRTOS Includes
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
 #include <queue.h>
 #include <semphr.h>
 
-//CNC 20170525 Added to have booleans
+//Our Includes
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +51,33 @@ void communicate_serial(void *pvParameters)
 
 void read_joystick(void *pvParameters)
 {
+	while (1) {
+		//Waiting for joystick to be pressed
+		if (PINC & 0b11001000){
+			//Up
+			com_send_bytes((uint8_t *)"Up\n", 4);
+			} else if (PINC & 0b00101000) {
+			//Left
+			com_send_bytes((uint8_t *)"Left\n", 6);
+			} else if (PINC & 0b10011000) {
+			//Down
+			com_send_bytes((uint8_t *)"Down\n", 6);
+			} else if (PINC & 0b01001110) {
+			//Right
+			com_send_bytes((uint8_t *)"Right\n", 7);
+			} else if (PIND3 & 0b00001100) {
+			//Push - Pause mode
+			com_send_bytes((uint8_t *)"Pause\n", 7);
+			} else {
+			
+		}
+		vTaskDelay(500);
+	}
+	//Left  -> 0b10000000
+	//Up    -> 0b01000000
+	//Down  -> 0b00000001
+	//Right -> 0b00000010
+	//Push  -> 0b00001100
 
 }
 
@@ -94,7 +121,7 @@ void handle_display(void)
 	if (col == 0)
 		prepare_shiftregister();
 	
-	load_col_value(frame_buf[col]);
+	load_col_value(frame_buffer[col]);
 	
 	clock_shift_register_and_prepare_for_next_col();
 	
@@ -117,6 +144,8 @@ int main(void)
 	
 	// Shift register Enable output (G=0)
 	PORTD &= ~_BV(PORTD6);
+
+	xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	
 	// Start the display handler timer
 	init_display_timer(handle_display);
