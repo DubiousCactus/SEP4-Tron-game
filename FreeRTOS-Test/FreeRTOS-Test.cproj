@@ -254,6 +254,9 @@
     <Compile Include="src\serial\serial.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="types.h">
+      <SubType>compile</SubType>
+    </Compile>
     <None Include="src\FreeRTOS\Source\portable\MemMang\heap_2.c">
       <SubType>compile</SubType>
     </None>

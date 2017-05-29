@@ -4,14 +4,14 @@ typedef struct Turn {
 } Turn;
 
 enum Direction {
-	LEFT, RIGHT, UP, DOWN;
-}
+	LEFT, RIGHT, UP, DOWN
+};
 
 typedef struct Position {
 	int x;
 	int y;
+	enum Direction direction;
 	Turn turns[];
-	Direction direction;
 } Position;
 
 typedef struct Score {

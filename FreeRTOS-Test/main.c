@@ -18,7 +18,7 @@
 #include "src/board/board.h"
 
 //Custom types
-#include "tags.h"
+#include "types.h"
 
 static const uint8_t _COM_RX_QUEUE_LENGTH = 30;
 
@@ -28,7 +28,7 @@ static SemaphoreHandle_t  xMutexReceivedData = NULL;
 // frame_buffer contains a bit pattern for each column in the display
 static uint16_t frame_buffer[14] = {0};
 
-static int gameState[14[10] = { {0} };
+static int gameState[14][10] = {{0}};
 static Position playerOne, playerTwo;
 static Score score;
 
@@ -60,7 +60,7 @@ void game_processing(void *pvParameters)
 				gameState[i][j] = 0;
 
 	/* Draw player one and check collisions with player two */
-	for (int i = 1; i < playerOne.turns.length; i++) {
+	for (int i = 1; i < sizeof(playerOne.turns); i++) {
 		if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
 
 			//Turn on LEDs for this line
