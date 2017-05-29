@@ -17,6 +17,9 @@
 
 #include "src/board/board.h"
 
+//Custom types
+#include "tags.h"
+
 static const uint8_t _COM_RX_QUEUE_LENGTH = 30;
 
 static QueueHandle_t _received_chars_queue = NULL;
@@ -24,6 +27,10 @@ static SemaphoreHandle_t  xMutexReceivedData = NULL;
 
 // frame_buffer contains a bit pattern for each column in the display
 static uint16_t frame_buffer[14] = {0};
+
+static int gameState[14[10] = { {0} };
+static Position playerOne, playerTwo;
+static Score score;
 
 
 void refresh_screen(void *pvParameters)
@@ -39,7 +46,10 @@ void game_processing(void *pvParameters)
 	 */
 
 	/* Erase player one */
-	//Todo
+	for (int i = 0; i < 14; i++)
+		for (int j = 0; j < 10; j++)
+			if (gameState[i][j] == 1)
+				gameState[i][j] = 0;
 
 	/* Draw player one and check collisions with player two */
 	for (int i = 1; i < playerOne.turns.length; i++) {
@@ -65,7 +75,10 @@ void game_processing(void *pvParameters)
 	}
 
 	/* Erase player two */
-	//Todo
+	for (int i = 0; i < 14; i++)
+		for (int j = 0; j < 10; j++)
+			if (gameState[i][j] == 2)
+				gameState[i][j] = 0;
 
 	/* Draw player two and check collisions with player one */
 	for (int i = 1; i < playerTwo.turns.length; i++) {
