@@ -32,124 +32,162 @@ static int gameState[14][10] = {{0}};
 static Position playerOne, playerTwo;
 static Score score;
 
+//
+//void make_frame(void *pvParameters)
+//{
+	///* Create frame from gameState */
+	//for (int i = 0; i < 14; i++) { //For each column
+		//for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+			//if (gameState[i][j] != 0) { //Add up
+				//frame_buffer[i]	+= pow(2, j);
+			//}
+		//}
+	//}
+//
+//}
 
-void make_frame(void *pvParameters)
+
+//void game_processing(void *pvParameters)
+//{
+	///* Populate gameState from the players' positions and tracks:
+ 	 //* Start at turn[i] to compare with turn[i - 1] for each player
+	 //*/
+//
+	///* Erase player one */
+	//for (int i = 0; i < 14; i++)
+		//for (int j = 0; j < 10; j++)
+			//if (gameState[i][j] == 1)
+				//gameState[i][j] = 0;
+//
+	///* Draw player one and check collisions with player two */
+	////for (int i = 1; i < sizeof(playerOne.turns); i++) {
+		//if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
+//
+			////Turn on LEDs for this line
+			//for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
+				//if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player two !!
+					////collision = true;
+				//else
+					//gameState[playerOne.turns[i].x][j] = 1;
+			//}
+//
+		//} else { //Horizontal line
+			//
+			//for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
+				//if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player two !!
+					////collision = true;
+				//else
+					//gameState[j][playerOne.turns[i].y] = 1;
+			//}
+		//}
+	////}
+//
+	///* Erase player two */
+	//for (int i = 0; i < 14; i++)
+		//for (int j = 0; j < 10; j++)
+			//if (gameState[i][j] == 2)
+				//gameState[i][j] = 0;
+//
+	///* Draw player two and check collisions with player one */
+	////for (int i = 1; i < sizeof(playerTwo.turns); i++) {
+		//if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
+//
+			////Turn on LEDs for this line
+			//for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
+				//if (gameState[playerTwo.turns[i].x][j] == 2) //Collision with player one !!
+					////collision = true;
+				//else
+					//gameState[playerTwo.turns[i].x][j] = 1;
+			//}
+//
+		//} else { //Horizontal line
+			//
+			//for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
+				//if (gameState[j][playerTwo.turns[i].y] == 2) //Collision with player one !!
+					////collision = true;
+				//else
+					//gameState[j][playerTwo.turns[i].y] = 1;
+			//}
+		//}
+	////}
+//
+	///* Calculate score */
+//
+//}
+
+bool correct_arrow_key(char data_received[])
 {
-	/* Create frame from gameState */
-	for (int i = 0; i < 14; i++) { //For each column
-		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
-			if (gameState[i][j] != 0) { //Add up
-				frame_buffer[i]	+= pow(2, j);
-			}
-		}
+	switch (data_received[0])
+	{
+		case 0x41 : return true;	//A
+		case 0x61 : return true;	//a
+		case 0x57 : return true;	//W
+		case 0x77 : return true;	//w
+		case 0x44 : return true;	//D
+		case 0x64 : return true;	//d
+		case 0x53 : return true;	//S
+		case 0x73 : return true;	//s
+		default  : return false;
+
 	}
-
-}
-
-
-void game_processing(void *pvParameters)
-{
-	/* Populate gameState from the players' positions and tracks:
- 	 * Start at turn[i] to compare with turn[i - 1] for each player
-	 */
-
-	/* Erase player one */
-	for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-			if (gameState[i][j] == 1)
-				gameState[i][j] = 0;
-
-	/* Draw player one and check collisions with player two */
-	for (int i = 1; i < sizeof(playerOne.turns); i++) {
-		if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
-
-			//Turn on LEDs for this line
-			for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
-				if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player two !!
-					collision = true;
-				else
-					gameState[playerOne.turns[i].x][j] = 1;
-			}
-
-		} else { //Horizontal line
-			
-			for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
-				if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player two !!
-					collision = true;
-				else
-					gameState[j][playerOne.turns[i].y] = 1;
-			}
-		}
-	}
-
-	/* Erase player two */
-	for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-			if (gameState[i][j] == 2)
-				gameState[i][j] = 0;
-
-	/* Draw player two and check collisions with player one */
-	for (int i = 1; i < playerTwo.turns.length; i++) {
-		if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
-
-			//Turn on LEDs for this line
-			for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
-				if (gameState[playerTwo.turns[i].x][j] == 2) //Collision with player one !!
-					collision = true;
-				else
-					gameState[playerTwo.turns[i].x][j] = 1;
-			}
-
-		} else { //Horizontal line
-			
-			for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
-				if (gameState[j][playerTwo.turns[i].y] == 2) //Collision with player one !!
-					collision = true;
-				else
-					gameState[j][playerTwo.turns[i].y] = 1;
-			}
-		}
-	}
-
-	/* Calculate score */
-
 }
 
 void communicate_serial(void *pvParameters)
 {
+	
+	//Variables
+	uint8_t data[] = "";
 
+	_received_chars_queue = xQueueCreate(_COM_RX_QUEUE_LENGTH, (unsigned portBASE_TYPE) sizeof (uint8_t));
+	init_com(_received_chars_queue);	
+
+	while (1) {
+		//Check data sent from pc
+		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
+
+			//Received data from pc - check if it's a correct arrow key
+			if (correct_arrow_key(&data) == true){
+				//Goodie, this is a correct arrow, move Player 2 avatar.
+			}
+		}
+	}
 }
 
 void read_joystick(void *pvParameters)
 {
-	while (1) {
-		//Waiting for joystick to be pressed
-		if (PINC & 0b11001000){
-			//Up
-			com_send_bytes((uint8_t *)"Up\n", 4);
-			} else if (PINC & 0b00101000) {
-			//Left
-			com_send_bytes((uint8_t *)"Left\n", 6);
-			} else if (PINC & 0b10011000) {
-			//Down
-			com_send_bytes((uint8_t *)"Down\n", 6);
-			} else if (PINC & 0b01001110) {
-			//Right
-			com_send_bytes((uint8_t *)"Right\n", 7);
-			} else if (PIND3 & 0b00001100) {
-			//Push - Pause mode
-			com_send_bytes((uint8_t *)"Pause\n", 7);
-			} else {
-			
-		}
-		vTaskDelay(500);
-	}
-	//Left  -> 0b10000000
-	//Up    -> 0b01000000
-	//Down  -> 0b00000001
-	//Right -> 0b00000010
-	//Push  -> 0b00001100
 
+	while (1) {
+		uint8_t Right	= PINC>>1 & 0x01;
+		uint8_t Left	= PINC>>7 & 0x01;
+		uint8_t Up		= PINC>>6 & 0x01;
+		uint8_t Down	= PINC>>0 & 0x01;
+		uint8_t Pushed  = PIND>>3 & 0x01;
+	
+		//Waiting for joystick to be pressed
+		//Down
+		if (Down == 0){		
+			com_send_bytes((uint8_t *)"Down\n", 5);
+
+		//Right
+		} else if (Right == 0) {
+			com_send_bytes((uint8_t *)"Right\n", 6);
+		
+		//Up
+		} else if (Up == 0) {
+			com_send_bytes((uint8_t *)"Up\n", 3);
+
+		//Left
+		} else if (Left == 0) {
+			com_send_bytes((uint8_t *)"Left\n", 5);
+		
+		//Push
+		} else if (Pushed == 0) {
+			com_send_bytes((uint8_t *)"Pause\n", 6);
+
+		} else {
+
+		}
+	}
 }
 
 // Prepare shift register setting SER = 1
