@@ -276,18 +276,22 @@ void read_joystick(void *pvParameters)
 		//Down
 		if (Down == 0){
 			com_send_bytes((uint8_t *)"Down\n", 5);
+			turn_player(playerOne, Direction.DOWN);
 
 			//Right
 			} else if (Right == 0) {
 			com_send_bytes((uint8_t *)"Right\n", 6);
+			turn_player(playerOne, Direction.RIGHT);
 			
 			//Up
 			} else if (Up == 0) {
 			com_send_bytes((uint8_t *)"Up\n", 3);
+			turn_player(playerOne, Direction.UP);
 
 			//Left
 			} else if (Left == 0) {
 			com_send_bytes((uint8_t *)"Left\n", 5);
+			turn_player(playerOne, Direction.LEFT);
 			
 			//Push
 			} else if (Pushed == 0) {
@@ -361,7 +365,7 @@ void handle_display(void)
 	static uint8_t col = 0;
 	
 	if (col == 0)
-	prepare_shiftregister();
+		prepare_shiftregister();
 	
 	load_col_value(frame_buffer[col]);
 	
@@ -370,7 +374,6 @@ void handle_display(void)
 	// count column up - prepare for next
 	if (col++ > 13)
 		col = 0;
-	col = 0;
 }
 
 //-----------------------------------------

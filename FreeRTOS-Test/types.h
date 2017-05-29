@@ -3,9 +3,9 @@ typedef struct Turn {
 	int y;
 } Turn;
 
-enum Direction {
+typedef enum Direction {
 	LEFT, RIGHT, UP, DOWN
-};
+} Direction;
 
 typedef struct Position {
 	int x;
