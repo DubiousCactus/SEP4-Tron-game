@@ -34,11 +34,61 @@ void refresh_screen(void *pvParameters)
 
 void game_processing(void *pvParameters)
 {
-	/* Populate gameState from the players' positions and tracks */
+	/* Populate gameState from the players' positions and tracks:
+ 	 * Start at turn[i] to compare with turn[i - 1] for each player
+	 */
 
+	/* Erase player one */
+	//Todo
 
-	/* Calculate collisions */
+	/* Draw player one and check collisions with player two */
+	for (int i = 1; i < playerOne.turns.length; i++) {
+		if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
 
+			//Turn on LEDs for this line
+			for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
+				if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player two !!
+					collision = true;
+				else
+					gameState[playerOne.turns[i].x][j] = 1;
+			}
+
+		} else { //Horizontal line
+			
+			for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
+				if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player two !!
+					collision = true;
+				else
+					gameState[j][playerOne.turns[i].y] = 1;
+			}
+		}
+	}
+
+	/* Erase player two */
+	//Todo
+
+	/* Draw player two and check collisions with player one */
+	for (int i = 1; i < playerTwo.turns.length; i++) {
+		if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
+
+			//Turn on LEDs for this line
+			for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
+				if (gameState[playerTwo.turns[i].x][j] == 2) //Collision with player one !!
+					collision = true;
+				else
+					gameState[playerTwo.turns[i].x][j] = 1;
+			}
+
+		} else { //Horizontal line
+			
+			for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
+				if (gameState[j][playerTwo.turns[i].y] == 2) //Collision with player one !!
+					collision = true;
+				else
+					gameState[j][playerTwo.turns[i].y] = 1;
+			}
+		}
+	}
 
 	/* Calculate score */
 
