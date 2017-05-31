@@ -27,3 +27,4 @@ typedef struct Score {
 typedef enum ProtocolState {
 	IDLE, ESC, HEADER, ERROR, PAYLOAD, TRAILER, FRAME_VALIDATION
 } ProtocolState;
+
