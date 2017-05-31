@@ -153,9 +153,12 @@ void move_player(Player* player)
 	//TODO: Figure out the front collision detection and death mechanism
 }
 
-void draw_players_lines(Player *player)
+/* Returns true if collision */
+uint8_t draw_players_lines(Player *player)
 {
-	
+	uint8_t collision = false;	
+	int from, to;
+
 	for (int i = 0; i < (*player).turnsCount + 1; i++) {
 
 		if (i < (*player).turnsCount) { //Processing every turn
@@ -172,8 +175,8 @@ void draw_players_lines(Player *player)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((player == playerOne && gameState[(*player).turns[i].x][j] == 2)
-							|| (player == playerTwo && gameState[(*player).turns[i].x][j] == 1)) //Collision with player 2 !
+					if (((*player)== playerOne && gameState[(*player).turns[i].x][j] == 2)
+							|| ((*player)== playerTwo && gameState[(*player).turns[i].x][j] == 1)) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[(*player).turns[i].x][j] = 1;
@@ -191,8 +194,8 @@ void draw_players_lines(Player *player)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((player == playerOne && gameState[j][(*player).turns[i].y] == 2)
-						   || (player == playerTwo && gameState[j][(*player).turns[i].y] == 1)) //Collision with player 2 !
+					if (((*player)== playerOne && gameState[j][(*player).turns[i].y] == 2)
+						   || ((*player)== playerTwo && gameState[j][(*player).turns[i].y] == 1)) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[j][(*player).turns[i].y] = 1;
@@ -214,8 +217,8 @@ void draw_players_lines(Player *player)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((player == playerOne && gameState[(*player).x][j] == 2)
-						   || (player == playerTwp && gameState[(*player).x][j] == 1)) //Collision with player 2 !
+					if (((*player)== playerOne && gameState[(*player).x][j] == 2)
+						   || ((*player)== playerTwp && gameState[(*player).x][j] == 1)) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[(*player).x][j] = 1;
@@ -233,8 +236,8 @@ void draw_players_lines(Player *player)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((player == playerOne && gameState[j][(*player).y] == 2)
-						   || (player == playerTwo && gameState[j][(*player).y] == 1) //Collision with player 2 !
+					if (((*player)== playerOne && gameState[j][(*player).y] == 2)
+						   || ((*player)== playerTwo && gameState[j][(*player).y] == 1) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[j][(*player).y] = 1;
@@ -244,6 +247,8 @@ void draw_players_lines(Player *player)
 
 		}
 	}
+
+	return collision;
 }
 
 /* TODO: protect gameState with a mutex */
@@ -254,7 +259,6 @@ void game_processing(void *pvParameters)
 	*/
 
 	bool collision = false;
-	int from, to;
 
 	for(;;) {
 
@@ -272,6 +276,8 @@ void game_processing(void *pvParameters)
 						if ((player == playerOne && gameState[i][j] == 1)
 							|| (player == playerTwo && gameState[i][j] == 2))
 								gameState[i][j] = 0;
+
+				collision = draw_players_lines(&player);
 
 				/* Move players in their current direction */
 				move_player(&player);
