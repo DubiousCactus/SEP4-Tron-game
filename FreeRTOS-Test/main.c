@@ -38,7 +38,6 @@ static uint8_t gameOver = 0;
 static SemaphoreHandle_t xGameStateSemaphore = NULL;
 static SemaphoreHandle_t xPlayerOneSemaphore = NULL;
 static SemaphoreHandle_t xPlayerTwoSemaphore = NULL;
-static SemaphoreHandle_t  xGameOverSemaphore = NULL;
 
 static Score score;
 
@@ -54,42 +53,35 @@ void communicate_serial(void *pvParameters)
 
 		/*Constantly checking data coming from the PC*/
 		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
-
-			switch (data[0]) {
-				case 0x41 :								
+			if(xSemaphoreTake(xPlayerTwoSemaphore, (TickType_t) 10)) {
+				switch (data[0]) {
+					case 0x41 :
 					turn_player(&playerTwo, LEFT);		//A
 					break;
-				case 0x61 :								
+					case 0x61 :
 					turn_player(&playerTwo, LEFT);		//a
 					break;
-				case 0x57 :														
+					case 0x57 :
 					turn_player(&playerTwo, UP);		//W
 					break;
-				case 0x77 :
+					case 0x77 :
 					turn_player(&playerTwo, UP);		//w
 					break;
-				case 0x44 :
+					case 0x44 :
 					turn_player(&playerTwo, RIGHT);		//D
 					break;
-				case 0x64 :
+					case 0x64 :
 					turn_player(&playerTwo, RIGHT);		//d
 					break;
-				case 0x53 :
+					case 0x53 :
 					turn_player(&playerTwo, DOWN);		//S
 					break;
-				case 0x73 :
+					case 0x73 :
 					turn_player(&playerTwo, DOWN);		//s
 					break;
+				}
+				xSemaphoreGive(xPlayerTwoSemaphore);
 			}
-		}
-
-		/*Constantly checking if game is over*/
-		if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
-			/*Sending data to the PC when score is changed*/
-			if (gameOver == true)
-				com_send_bytes((uint8_t *)"GAME OVER\n", 10);
-			
-			xSemaphoreGive(xGameOverSemaphore);
 		}
 
 		vTaskDelay(20);
@@ -108,14 +100,18 @@ void make_frame(void *pvParameters)
 			}
 		}
 
-		/* Create frame from gameState */
-		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
-			for (int i = 0; i < 14; i++) { //For each column
-				if (gameState[i][j] != 0) { //Add up
-					frame_buffer[i]	+= (int) (pow(2,  j) + 0.5);
+		if(xSemaphoreTake(xGameStateSemaphore, (TickType_t) 10)){
+			/* Create frame from gameState */
+			for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+				for (int i = 0; i < 14; i++) { //For each column
+					if (gameState[i][j] != 0) { //Add up
+						frame_buffer[i]	+= (int) (pow(2,  j) + 0.5);
+					}
 				}
 			}
+			xSemaphoreGive(xGameStateSemaphore);
 		}
+
 
 		vTaskDelay(50);
 	}
@@ -262,26 +258,30 @@ void game_processing(void *pvParameters)
 	for(;;) {
 
 		while(!collision) {
-			
-			for (int p = 1; p <= 2; p++) {
-				/* Erase player */
-				for (int i = 0; i < 14; i++)
+			if (xSemaphoreTake(xGameStateSemaphore, (TickType_t) 10) && xSemaphoreTake(xPlayerOneSemaphore, (TickType_t) 10) && xSemaphoreTake(xPlayerTwoSemaphore, (TickType_t) 10)) {
+				for (int p = 1; p <= 2; p++) {
+					/* Erase player */
+					for (int i = 0; i < 14; i++)
 					for (int j = 0; j < 10; j++)
-						if ((p == 0 && gameState[i][j] == 1)
-							|| (p == 1 && gameState[i][j] == 2))
-								gameState[i][j] = 0;
+					if ((p == 0 && gameState[i][j] == 1)
+					|| (p == 1 && gameState[i][j] == 2))
+					gameState[i][j] = 0;
+			
+			
 
-
-				/* Move players in their current direction */
-				if (p == 1) {
-					collision = draw_players_lines(&playerOne, p);
-					move_player(&playerOne);
-				} else if (p == 2) {
-					collision = draw_players_lines(&playerTwo, p);
-					move_player(&playerTwo);
+					/* Move players in their current direction */
+					if (p == 1) {
+						collision = draw_players_lines(&playerOne, p);
+						move_player(&playerOne);
+					} else if (p == 2) {
+						collision = draw_players_lines(&playerTwo, p);
+						move_player(&playerTwo);
+					}
+					xSemaphoreGive(xGameStateSemaphore);
+					xSemaphoreGive(xPlayerOneSemaphore);
+					xSemaphoreGive(xPlayerTwoSemaphore);
 				}
 			}
-
 			vTaskDelay(1000);
 		}
 
@@ -341,10 +341,12 @@ void read_joystick(void *pvParameters)
 		}
 
 		if (turnPlayer && !isPressing && (++debounceCounter >= debounceThreshold)) {
-			com_send_bytes("move", 4);
-			turn_player(&playerOne, direction);
-			turnPlayer = 0;
-			debounceCounter = 0;
+			if (xSemaphoreTake(xPlayerOneSemaphore, (TickType_t) 10)) {
+				turn_player(&playerOne, direction);
+				turnPlayer = 0;
+				debounceCounter = 0;
+				xSemaphoreGive(xPlayerOneSemaphore);
+			}
 		}
 
 		vTaskDelay(20);
@@ -503,14 +505,13 @@ int main(void)
 	xGameStateSemaphore = xSemaphoreCreateMutex();
 	xPlayerOneSemaphore = xSemaphoreCreateMutex();
 	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
-	xGameOverSemaphore = xSemaphoreCreateMutex();
 
 	init_players();
 
 	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskGameProcessing = xTaskCreate(game_processing, (const char*)"Game processing", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskMakeFrame = xTaskCreate(make_frame, (const char*)"Make frame", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL );
-
+	BaseType_t taskCommunicateSerial = xTaskCreate(communicate_serial, (const char*)"Communicate serial", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 
 	// Start the display handler timer
 	init_display_timer(handle_display);

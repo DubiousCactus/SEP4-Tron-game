@@ -21,3 +21,8 @@ typedef struct Score {
 	int playerOne;
 	int playerTwo;
 } Score;
+
+
+typedef enum State{
+	IDLE, HEADER, ERROR, PAYLOAD, TRAILER, VALID, ESC
+} State;
