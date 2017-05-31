@@ -155,7 +155,7 @@ void move_player(Player* player)
 
 /* Returns true if collision */
 uint8_t draw_players_lines(Player *player, int playerId)
-{
+  {
 	uint8_t collision = false;	
 	int from, to;
 
@@ -179,7 +179,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 							|| (playerId == 2 && gameState[(*player).turns[i].x][j] == 1)) //Collision !
 						collision = true;
 					else
-						gameState[(*player).turns[i].x][j] = 1;
+						gameState[(*player).turns[i].x][j] = playerId;
 				}
 
 			} else if ((*player).turns[i].y == (*player).turns[i + 1].y) { //Draw horizontal line
@@ -198,7 +198,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 						   || (playerId == 2 && gameState[j][(*player).turns[i].y] == 1)) //Collision !
 						collision = true;
 					else
-						gameState[j][(*player).turns[i].y] = 1;
+						gameState[j][(*player).turns[i].y] = playerId;
 				}
 
 			}
@@ -221,7 +221,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 						   || (playerId == 2 && gameState[(*player).x][j] == 1)) //Collision !
 						collision = true;
 					else
-						gameState[(*player).x][j] = 1;
+						gameState[(*player).x][j] = playerId;
 				}
 
 			} else if ((*player).turns[i].y == (*player).y) { //Draw horizontal line
@@ -236,11 +236,10 @@ uint8_t draw_players_lines(Player *player, int playerId)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((playerId == 1 && gameState[j][(*player).y] == 2)
-						   || (playerId == 2 && gameState[j][(*player).y] == 1) //Collision !
+					if ((playerId == 1 && gameState[j][(*player).y] == 2) || (playerId == 2 && gameState[j][(*player).y] == 1)) //Collision !
 						collision = true;
 					else
-						gameState[j][(*player).y] = 1;
+						gameState[j][(*player).y] = playerId;
 				}
 
 			}
@@ -277,7 +276,7 @@ void game_processing(void *pvParameters)
 				if (p == 1) {
 					collision = draw_players_lines(&playerOne, p);
 					move_player(&playerOne);
-				} else {
+				} else if (p == 2) {
 					collision = draw_players_lines(&playerTwo, p);
 					move_player(&playerTwo);
 				}
@@ -427,11 +426,11 @@ void init_players()
 	turn0.y = 5;
 	playerOne.turns[0] = turn0;
 
-	playerTwo.x = 14;
+	playerTwo.x = 13;
 	playerTwo.y = 5;
 	playerTwo.direction = LEFT;
 	turn0;
-	turn0.x = 14;
+	turn0.x = 13;
 	turn0.y = 5;
 	playerTwo.turns[0] = turn0;
 }
