@@ -159,7 +159,7 @@ void game_processing(void *pvParameters)
 					if (gameState[i][j] == 1)
 						gameState[i][j] = 0;
 	
-			for (int i = 0; i <= playerOne.turnsCount; i++) {
+			for (int i = 0; i < playerOne.turnsCount + 1; i++) {
 
 				if (i < playerOne.turnsCount) { //Processing every turn
 
