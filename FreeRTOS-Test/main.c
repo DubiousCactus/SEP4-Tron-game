@@ -112,6 +112,36 @@ void make_frame(void *pvParameters)
 	}
 }
 
+void die(Position player)
+{
+	//TODO	
+	com_send_bytes("DEAD!\n", 6);
+}
+
+void move_player(Position player)
+{
+	switch (direction) {
+		case LEFT:
+			if (player.x > 0)
+				player.x--;
+			break;
+		case RIGHT:
+			if (player.x < 14)
+				player.x++;
+			break;
+		case UP:
+			if (player.y > 0)
+				player.y--;
+			break;
+		case DOWN:
+			if (player.y < 10)
+				player.y++;
+			break;
+	}
+
+	//TODO: Figure out the front collision detection and death mechanism
+}
+
 
 /* TODO: protect gameState with a mutex */
 void game_processing(void *pvParameters)
@@ -263,36 +293,11 @@ void game_processing(void *pvParameters)
 		}
 
 		/* Move players in their current direction */
-		switch (playerOne.direction) {
-			case LEFT:
-				playerOne.x--;
-				break;
-			case RIGHT:
-				playerOne.x++;
-				break;
-			case UP:
-				playerOne.y--;
-				break;
-			case DOWN:
-				playerOne.y++;
-				break;
-		}
-
-		switch (playerTwo.direction) {
-			case LEFT:
-				playerTwo.x--;
-				break;
-			case RIGHT:
-				playerTwo.x++;
-				break;
-			case UP:
-				playerTwo.y--;
-				break;
-			case DOWN:
-				playerTwo.y++;
-				break;
-		}
+		move_player(playerOne);
+		move_player(playerTwo);
 	}
+
+	die();
 }
 
 void read_joystick(void *pvParameters)
