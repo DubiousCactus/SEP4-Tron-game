@@ -190,7 +190,7 @@ void game_processing(void *pvParameters)
 
 						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[playerOne.turns[i].x][j] != 0) //Collision with player 2 !
+							if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player 2 !
 								collision = true;
 							else
 								gameState[playerOne.turns[i].x][j] = 1;
@@ -208,7 +208,7 @@ void game_processing(void *pvParameters)
 
 						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[j][playerOne.turns[i].y] != 0) //Collision with player 2 !
+							if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player 2 !
 								collision = true;
 							else
 								gameState[j][playerOne.turns[i].y] = 1;
@@ -230,7 +230,7 @@ void game_processing(void *pvParameters)
 
 						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[playerOne.x][j] != 0) //Collision with player 2 !
+							if (gameState[playerOne.x][j] == 2) //Collision with player 2 !
 								collision = true;
 							else
 								gameState[playerOne.x][j] = 1;
@@ -248,7 +248,7 @@ void game_processing(void *pvParameters)
 
 						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[j][playerOne.y] != 0) //Collision with player 2 !
+							if (gameState[j][playerOne.y] == 2) //Collision with player 2 !
 								collision = true;
 							else
 								gameState[j][playerOne.y] = 1;
