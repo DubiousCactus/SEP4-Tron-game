@@ -204,12 +204,12 @@ void game_processing(void *pvParameters)
 			} else {
 
 				/* Draw player one and check collisions with player two */
-				for (int i = 0; i < playerOne.turnsCount + 1; i++) {
+				for (int i = 0; i < playerOne.turnsCount; i++) {
 					Turn turn;
 					turn.x = playerOne.turns[i].x;
 					turn.y = playerOne.turns[i].y;
 
-					if (i == playerOne.turnsCount + 1) { //Current position, all turns were drawn
+					if (i == playerOne.turnsCount) { //Current position, all turns were drawn
 						turn.x = playerOne.x;
 						turn.y = playerOne.y;
 					}
@@ -277,11 +277,11 @@ void read_joystick(void *pvParameters)
 	//The parameters are not used
 	( void ) pvParameters;
 
-	uint8_t Right;
-	uint8_t Left;
-	uint8_t Up;
-	uint8_t Down;
-	uint8_t Pushed;
+	uint8_t right;
+	uint8_t left;
+	uint8_t up;
+	uint8_t down;
+	uint8_t pushed;
 	Direction direction;
 	uint8_t debounceCounter = 0;
 	uint8_t debounceThreshold = 15;
@@ -290,29 +290,29 @@ void read_joystick(void *pvParameters)
 
 	for (;;) {
 		/*Constantly checking joystick state*/
-		Right	= !(PINC >> 1 & 0x01);
-		Left	= !(PINC >> 7 & 0x01);
-		Up		= !(PINC >> 6 & 0x01);
-		Down	= !(PINC >> 0 & 0x01);
-		Pushed  = !(PIND >> 3 & 0x01);
+		right	= !(PINC >> 1 & 0x01);
+		left	= !(PINC >> 7 & 0x01);
+		up		= !(PINC >> 6 & 0x01);
+		down	= !(PINC >> 0 & 0x01);
+		pushed  = !(PIND >> 3 & 0x01);
 
-		if (Down){
+		if (down){
 			direction = DOWN;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Right) {
+		} else if (right) {
 			direction = RIGHT;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Up) {
+		} else if (up) {
 			direction = UP;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Left) {
+		} else if (left) {
 			direction = LEFT;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Pushed) {
+		} else if (pushed) {
 			//TODO: pause game
 			debounceCounter = 0;
 		} else {
@@ -388,7 +388,7 @@ void turn_player(Player *player, Direction direction)
 void init_players()
 {
 
-	for (int i = 0; i < MAXTURNS + 1; i++) {
+	for (int i = 0; i < MAXTURNS + 1; i++) { //MAXTURNS + 1 because turn[0] is the init position, not a turn
 		playerOne.turns[i].y = -1;
 		playerOne.turns[i].y = -1;
 		playerTwo.turns[i].x = -1;
@@ -453,7 +453,7 @@ void handle_display(void)
 	static uint8_t col = 0;
 	
 	if (col == 0)
-	prepare_shiftregister();
+		prepare_shiftregister();
 	
 	load_col_value(frame_buffer[col]);
 	
@@ -461,7 +461,7 @@ void handle_display(void)
 	
 	// count column up - prepare for next
 	if (col++ > 13)
-	col = 0;
+		col = 0;
 }
 
 //-----------------------------------------
