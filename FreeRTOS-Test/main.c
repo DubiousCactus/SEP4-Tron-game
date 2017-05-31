@@ -158,7 +158,7 @@ void game_processing(void *pvParameters)
 					if (gameState[i][j] == 1)
 						gameState[i][j] = 0;
 			
-			if ((sizeof(playerOne.turns) / sizeof(playerOne.turns[0])) < 2) { //Didn't turn yet !
+			if (playerOne.turnsCount < 1) { //Didn't turn yet !
 
 				if (playerOne.x == playerOne.turns[0].x) { //Vertical line
 
