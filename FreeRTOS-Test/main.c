@@ -218,7 +218,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
 					if ((playerId == 1 && gameState[(*player).x][j] == 2)
-						   || ((*player)== playerTwp && gameState[(*player).x][j] == 1)) //Collision with player 2 !
+						   || (playerId == 2 && gameState[(*player).x][j] == 1)) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[(*player).x][j] = 1;
@@ -273,8 +273,8 @@ void game_processing(void *pvParameters)
 				/* Erase player */
 				for (int i = 0; i < 14; i++)
 					for (int j = 0; j < 10; j++)
-						if ((player == playerOne && gameState[i][j] == 1)
-							|| (player == playerTwo && gameState[i][j] == 2))
+						if ((p == 0 && gameState[i][j] == 1)
+							|| (p == 1 && gameState[i][j] == 2))
 								gameState[i][j] = 0;
 
 				collision = draw_players_lines(&player, p + 1);
