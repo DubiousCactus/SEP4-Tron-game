@@ -42,23 +42,6 @@ static SemaphoreHandle_t  xGameOverSemaphore = NULL;
 
 static Score score;
 
-bool correct_arrow_key(char data_received[])
-{
-	switch (data_received[0])
-	{
-		case 0x41 : return true;	//A
-		case 0x61 : return true;	//a
-		case 0x57 : return true;	//W
-		case 0x77 : return true;	//w
-		case 0x44 : return true;	//D
-		case 0x64 : return true;	//d
-		case 0x53 : return true;	//S
-		case 0x73 : return true;	//s
-		default  : return false;
-
-	}
-}
-
 void communicate_serial(void *pvParameters)
 {
 	//Variables
@@ -73,17 +56,16 @@ void communicate_serial(void *pvParameters)
 		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
 
 			//Received data from pc - check if it's a correct arrow key
-			if (correct_arrow_key(&data) == true){
-				switch (data[0]) {
-				case 0x41 : turn_player(playerTwo, Direction.LEFT);		//A
-				case 0x61 : turn_player(playerTwo, Direction.LEFT);		//a
-				case 0x57 : turn_player(playerTwo, Direction.UP);		//W
-				case 0x77 : turn_player(playerTwo, Direction.UP);		//w
-				case 0x44 : turn_player(playerTwo, Direction.RIGHT);	//D
-				case 0x64 : turn_player(playerTwo, Direction.RIGHT);	//d
-				case 0x53 : turn_player(playerTwo, Direction.DOWN);		//S
-				case 0x73 : turn_player(playerTwo, Direction.DOWN);		//s
-				default  : 
+			switch (data[0]) {
+				case 0x41 : turn_player(playerTwo, LEFT);	//A
+				case 0x61 : turn_player(playerTwo, LEFT);	//a
+				case 0x57 : turn_player(playerTwo, UP);		//W
+				case 0x77 : turn_player(playerTwo, UP);		//w
+				case 0x44 : turn_player(playerTwo, RIGHT);	//D
+				case 0x64 : turn_player(playerTwo, RIGHT);	//d
+				case 0x53 : turn_player(playerTwo, DOWN);	//S
+				case 0x73 : turn_player(playerTwo, DOWN);	//s
+				default: com_send_bytes((uint8_t) data, 1);
 			}
 		}
 
@@ -117,8 +99,8 @@ void make_frame(void *pvParameters)
 void game_processing(void *pvParameters)
 {
 	/* Populate gameState from the players' positions and tracks:
- 	 * Start at turn[i] to compare with turn[i - 1] for each player
-	 */
+	* Start at turn[i] to compare with turn[i - 1] for each player
+	*/
 
 	bool collision = false;
 
@@ -126,9 +108,9 @@ void game_processing(void *pvParameters)
 		
 		/* Erase player one */
 		for (int i = 0; i < 14; i++)
-			for (int j = 0; j < 10; j++)
-				if (gameState[i][j] == 1)
-					gameState[i][j] = 0;
+		for (int j = 0; j < 10; j++)
+		if (gameState[i][j] == 1)
+		gameState[i][j] = 0;
 
 		if (sizeof(playerOne.turns) < 2) { //Didn't turn yet !
 
@@ -141,12 +123,12 @@ void game_processing(void *pvParameters)
 							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
-					} else {
+						} else {
 						gameState[playerOne.turns[0].x][j] = 1;
 					}
 				}
 
-			} else { //Horizontal line
+				} else { //Horizontal line
 				
 				for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
 					if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
@@ -154,12 +136,12 @@ void game_processing(void *pvParameters)
 							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
-					} else {
+						} else {
 						gameState[j][playerOne.turns[0].y] = 1;
 					}
 				}
 			}
-		} else {
+			} else {
 
 			/* Draw player one and check collisions with player two */
 			for (int i = 1; i < sizeof(playerOne.turns); i++) {
@@ -172,12 +154,12 @@ void game_processing(void *pvParameters)
 								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else {
+							} else {
 							gameState[playerOne.turns[i].x][j] = 1;
 						}
 					}
 
-				} else { //Horizontal line
+					} else { //Horizontal line
 					
 					for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
 						if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
@@ -185,7 +167,7 @@ void game_processing(void *pvParameters)
 								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else {
+							} else {
 							gameState[j][playerOne.turns[i].y] = 1;
 						}
 					}
@@ -195,9 +177,9 @@ void game_processing(void *pvParameters)
 
 		/* Erase player two */
 		for (int i = 0; i < 14; i++)
-			for (int j = 0; j < 10; j++)
-				if (gameState[i][j] == 2)
-					gameState[i][j] = 0;
+		for (int j = 0; j < 10; j++)
+		if (gameState[i][j] == 2)
+		gameState[i][j] = 0;
 
 		if (sizeof(playerTwo.turns) < 2) { //Didn't turn yet !
 
@@ -210,12 +192,12 @@ void game_processing(void *pvParameters)
 							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
-					} else {
+						} else {
 						gameState[playerTwo.turns[0].x][j] = 1;
 					}
 				}
 
-			} else { //Horizontal line
+				} else { //Horizontal line
 				
 				for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
 					if (gameState[j][playerTwo.turns[0].y] == 2) { //Collision with player two !!
@@ -223,12 +205,12 @@ void game_processing(void *pvParameters)
 							gameOver = 1;
 							xSemaphoreGive(xGameOverSemaphore);
 						}
-					} else {
+						} else {
 						gameState[j][playerTwo.turns[0].y] = 1;
 					}
 				}
 			}
-		} else {
+			} else {
 
 			/* Draw player two and check collisions with player one */
 			for (int i = 1; i < sizeof(playerTwo.turns); i++) {
@@ -241,12 +223,12 @@ void game_processing(void *pvParameters)
 								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else {
+							} else {
 							gameState[playerTwo.turns[i].x][j] = 1;
 						}
 					}
 
-				} else { //Horizontal line
+					} else { //Horizontal line
 					
 					for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
 						if (gameState[j][playerTwo.turns[i].y] == 2) { //Collision with player one !!
@@ -254,7 +236,7 @@ void game_processing(void *pvParameters)
 								gameOver = 1;
 								xSemaphoreGive(xGameOverSemaphore);
 							}
-						} else {
+							} else {
 							gameState[j][playerTwo.turns[i].y] = 1;
 						}
 					}
@@ -265,107 +247,99 @@ void game_processing(void *pvParameters)
 		/* Move players in their current direction */
 		switch (playerOne.direction) {
 			case LEFT:
-				playerOne.x--;
-				break;
+			playerOne.x--;
+			break;
 			case RIGHT:
-				playerOne.x++;
-				break;
+			playerOne.x++;
+			break;
 			case UP:
-				playerOne.y--;
-				break;
+			playerOne.y--;
+			break;
 			case DOWN:
-				playerOne.y++;
-				break;
+			playerOne.y++;
+			break;
 		}
 
 		switch (playerTwo.direction) {
 			case LEFT:
-				playerTwo.x--;
-				break;
+			playerTwo.x--;
+			break;
 			case RIGHT:
-				playerTwo.x++;
-				break;
+			playerTwo.x++;
+			break;
 			case UP:
-				playerTwo.y--;
-				break;
+			playerTwo.y--;
+			break;
 			case DOWN:
-				playerTwo.y++;
-				break;
+			playerTwo.y++;
+			break;
 		}
 	}
 }
+
 
 void read_joystick(void *pvParameters)
 {
+	//The parameters are not used
+	( void ) pvParameters;
+
+
+	uint8_t Right;
+	uint8_t Left;
+	uint8_t Up;
+	uint8_t Down;
+	uint8_t Pushed;
+	Direction direction;
 	uint8_t debounceCounter = 0;
-	uint8_t debounceThreshold = 5;
+	uint8_t debounceThreshold = 15;
+	uint8_t turnPlayer = 0;
+	uint8_t isPressing = 0;
 
 	while (1) {
 		/*Constantly checking joystick state*/
-		
-		uint8_t Right	= PINC>>1 & 0x01;
-		uint8_t Left	= PINC>>7 & 0x01;
-		uint8_t Up		= PINC>>6 & 0x01;
-		uint8_t Down	= PINC>>0 & 0x01;
-		uint8_t Pushed  = PIND>>3 & 0x01;
-		
-		//Down
-		if (Down == 0){
-			debounceCounter += 1;
-			if (debounceCounter == debounceThreshold) {
-				com_send_bytes((uint8_t *)"Down\n", 5);
-				turn_player(playerOne, Direction.DOWN);
-			} else {
-				debounceCounter = 0;
-			}
+		Right	= !(PINC>>1 & 0x01);
+		Left	= !(PINC>>7 & 0x01);
+		Up		= !(PINC>>6 & 0x01);
+		Down	= !(PINC>>0 & 0x01);
+		Pushed  = !(PIND>>3 & 0x01);
 
-			//Right
-			} else if (Right == 0) {
-				debounceCounter += 1;
-				if (debounceCounter == debounceThreshold) {
-					com_send_bytes((uint8_t *)"Right\n", 6);
-					turn_player(playerOne, Direction.RIGHT);
-				} else {
-					debounceCounter = 0;
-				}
-			
-			//Up
-			} else if (Up == 0) {
-				debounceCounter += 1;
-				if (debounceCounter == debounceThreshold){
-					com_send_bytes((uint8_t *)"Up\n", 3);
-					turn_player(playerOne, Direction.UP);
-				} else {
-				debounceCounter = 0;
-				}
+		if (Down && (debounceCounter++ >= debounceThreshold)) {
+			direction = DOWN;
+			turnPlayer = 1;
+			debounceCounter = 0;
+			isPressing = 1;
+		} else if (Right && (debounceCounter++ >= debounceThreshold)) {
+			direction = RIGHT;
+			turnPlayer = 1;
+			debounceCounter = 0;
+			isPressing = 1;
+		} else if (Up && (debounceCounter++ >= debounceThreshold)) {
+			direction = UP;
+			turnPlayer = 1;
+			debounceCounter = 0;
+			isPressing = 1;
+		} else if (Left && (debounceCounter++ >= debounceThreshold)) {
+			direction = LEFT;
+			turnPlayer = 1;
+			debounceCounter = 0;
+			isPressing = 1;
+		} else if (Pushed && (debounceCounter++ >= debounceThreshold)) {
+			//TODO: pause game
+			debounceCounter = 0;
+		} else {
+			isPressing = 0;
+			//debounceCounter = 0;
+		}
 
-			//Left
-			} else if (Left == 0) {
-				debounceCounter += 1;
-				if (debounceCounter == debounceThreshold){
-					com_send_bytes((uint8_t *)"Left\n", 5);
-					turn_player(playerOne, Direction.LEFT);
-				} else {
-					debounceCounter = 0;
-				}
-			
-			//Push
-			} else if (Pushed == 0) {
-				debounceCounter += 1;
-				if (debounceCounter == debounceThreshold){
-					com_send_bytes((uint8_t *)"Pause\n", 6);
-					//Pause game!
-				} else {
-					debounceCounter = 0;
-				}
-
-			} else {
-
-			}
-
+		if (turnPlayer && isPressing == 0) {
+			com_send_bytes("move", 4);
+			turn_player(playerOne, direction);
+			turnPlayer = 0;
 		}
 	}
 }
+
+
 
 /* Changes the player's direction: will be applied in game_processing() */
 void turn_player(Position player, Direction direction)
@@ -373,21 +347,21 @@ void turn_player(Position player, Direction direction)
 
 	switch (direction) {
 		case UP:
-			if (player.direction == Direction.LEFT || player.direction == Direction.RIGHT)
-				player.direction = direction;
-			break;
+		if (player.direction == LEFT || player.direction == RIGHT)
+		player.direction = direction;
+		break;
 		case DOWN:
-			if (player.direction == Direction.LEFT || player.direction == Direction.RIGHT)
-				player.direction = direction;
-			break;
+		if (player.direction == LEFT || player.direction == RIGHT)
+		player.direction = direction;
+		break;
 		case LEFT:
-			if (player.direction == Direction.UP || player.direction == Direction.DOWN)
-				player.direction = direction;
-			break;
+		if (player.direction == UP || player.direction == DOWN)
+		player.direction = direction;
+		break;
 		case RIGHT:
-			if (player.direction == Direction.UP || player.direction == Direction.DOWN)
-				player.direction = direction;
-			break;
+		if (player.direction == UP || player.direction == DOWN)
+		player.direction = direction;
+		break;
 	}
 }
 
@@ -429,7 +403,7 @@ void handle_display(void)
 	static uint8_t col = 0;
 	
 	if (col == 0)
-		prepare_shiftregister();
+	prepare_shiftregister();
 	
 	load_col_value(frame_buffer[col]);
 	
@@ -437,7 +411,7 @@ void handle_display(void)
 	
 	// count column up - prepare for next
 	if (col++ > 13)
-		col = 0;
+	col = 0;
 }
 
 //-----------------------------------------
@@ -461,8 +435,9 @@ int main(void)
 	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
 	xGameOverSemaphore = xSemaphoreCreateMutex();
 
-	xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
-	
+	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+
+
 	// Start the display handler timer
 	init_display_timer(handle_display);
 	
