@@ -1,4 +1,6 @@
 #define MAXTURNS 14
+#define FLAG 0xFF
+#define ESCAPE 0xDD
 
 typedef struct Turn {
 	int x;
@@ -21,3 +23,7 @@ typedef struct Score {
 	int playerOne;
 	int playerTwo;
 } Score;
+
+typedef enum ProtocolState {
+	IDLE, ESC, HEADER, ERROR, PAYLOAD, TRAILER, FRAME_VALIDATION
+} ProtocolState;

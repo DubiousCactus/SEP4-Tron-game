@@ -45,51 +45,72 @@ static Score score;
 void communicate_serial(void *pvParameters)
 {
 	//Variables
-	uint8_t data[] = "";
+	uint8_t data[] = {0};
+	ProtocolState state = IDLE;
 
 	_received_chars_queue = xQueueCreate(_COM_RX_QUEUE_LENGTH, (unsigned portBASE_TYPE) sizeof (uint8_t));
 	init_com(_received_chars_queue);
 
+		//if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
+		
 	for(;;){
 
-		/*Constantly checking data coming from the PC*/
-		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
-
-			switch (data[0]) {
-				case 0x41 :								
-					turn_player(&playerTwo, LEFT);		//A
-					break;
-				case 0x61 :								
-					turn_player(&playerTwo, LEFT);		//a
-					break;
-				case 0x57 :														
-					turn_player(&playerTwo, UP);		//W
-					break;
-				case 0x77 :
-					turn_player(&playerTwo, UP);		//w
-					break;
-				case 0x44 :
-					turn_player(&playerTwo, RIGHT);		//D
-					break;
-				case 0x64 :
-					turn_player(&playerTwo, RIGHT);		//d
-					break;
-				case 0x53 :
-					turn_player(&playerTwo, DOWN);		//S
-					break;
-				case 0x73 :
-					turn_player(&playerTwo, DOWN);		//s
-					break;
-			}
-		}
-
-		/*Constantly checking if game is over*/
-		if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
-			/*Sending data to the PC when score is changed*/
-			if (gameOver == true)
-				com_send_bytes((uint8_t *)"GAME OVER\n", 10);
+		switch(state) {
 			
-			xSemaphoreGive(xGameOverSemaphore);
+			case IDLE:
+				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+				if (data[0] != FLAG)
+					state = error;
+				else
+					state = HEADER;
+				break;
+			case HEADER:
+				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+				if (data[0] == ESCAPE) {
+					state = ESC;
+				} else if (data[0] == FLAG) {
+					state = ERROR;
+				} else if (data[0] == DOT) {
+					state = PAYLOAD;
+				} else if (data[0] == COMMA) {
+					//save length of payload
+				} else {
+				}
+				break;
+			case PAYLOAD:
+				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+				if (data[0] == ESCAPE) {
+					state = ESC;
+				} else if (data[0] == FLAG) {
+					state = ERROR;
+				} else if (length_reached) {
+					state = TRAILER
+				} else {
+					save byte in payload
+				}
+				break;
+			case TRAILER:
+				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+				if (data[0] == ESCAPE) {
+					state = ESC;
+				} else if (data[0] == FLAG) {
+					state = FRAME_VALIDATION;
+				} else {
+					save bytes  in trailer
+				}
+				break;
+			case ESC:
+				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+				
+				break;
+			case ERROR:
+
+				break;
+			case FRAME_VALIDATION:
+
+				break;
+			case default:
+				state = ERROR;
 		}
 
 		vTaskDelay(20);
