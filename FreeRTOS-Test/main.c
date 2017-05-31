@@ -113,24 +113,24 @@ void die()
 	com_send_bytes("DEAD!\n", 6);
 }
 
-void move_player(Position player)
+void move_player(Position* player)
 {
-	switch (player.direction) {
+	switch ((*player).direction) {
 		case LEFT:
-		if (player.x > 0)
-		player.x--;
+		if ((*player).x > 0)
+		(*player).x--;
 		break;
 		case RIGHT:
-		if (player.x < 14)
-		player.x++;
+		if ((*player).x < 14)
+		(*player).x++;
 		break;
 		case UP:
-		if (player.y > 0)
-		player.y--;
+		if ((*player).y > 0)
+		(*player).y--;
 		break;
 		case DOWN:
-		if (player.y < 10)
-		player.y++;
+		if ((*player).y < 10)
+		(*player).y++;
 		break;
 	}
 
@@ -151,7 +151,7 @@ void game_processing(void *pvParameters)
 	playerOne.y = 5;
 	playerOne.direction = LEFT;
 	Turn turn0;
-	turn0.x = 12;
+	turn0.x = 5;
 	turn0.y = 5;
 	playerOne.turns[0] = turn0;
 
@@ -165,11 +165,11 @@ void game_processing(void *pvParameters)
 		while(!collision) {
 			
 			/* Erase player one */
-			/*for (int i = 0; i < 14; i++)
-			for (int j = 0; j < 10; j++)
-			if (gameState[i][j] == 1)
-			gameState[i][j] = 0;
-			*/
+			for (int i = 0; i < 14; i++)
+				for (int j = 0; j < 10; j++)
+					if (gameState[i][j] == 1)
+						gameState[i][j] = 0;
+			
 			if ((sizeof(playerOne.turns) / sizeof(playerOne.turns[0])) < 2) { //Didn't turn yet !
 
 				if (playerOne.x == playerOne.turns[0].x) { //Vertical line
@@ -291,7 +291,7 @@ void game_processing(void *pvParameters)
 			//}
 
 			/* Move players in their current direction */
-			//move_player(playerOne);
+			move_player(&playerOne);
 			//move_player(playerTwo);
 
 			vTaskDelay(1000);
@@ -334,15 +334,15 @@ void read_joystick(void *pvParameters)
 			direction = DOWN;
 			turnPlayer = 1;
 			isPressing = 1;
-			} else if (Right) {
+		} else if (Right) {
 			direction = RIGHT;
 			turnPlayer = 1;
 			isPressing = 1;
-			} else if (Up) {
+		} else if (Up) {
 			direction = UP;
 			turnPlayer = 1;
 			isPressing = 1;
-			} else if (Left) {
+		} else if (Left) {
 			direction = LEFT;
 			turnPlayer = 1;
 			isPressing = 1;
@@ -356,7 +356,7 @@ void read_joystick(void *pvParameters)
 
 		if (turnPlayer && !isPressing && (++debounceCounter >= debounceThreshold)) {
 			com_send_bytes("move", 4);
-			turn_player(playerOne, direction);
+			turn_player(&playerOne, direction);
 			turnPlayer = 0;
 			debounceCounter = 0;
 		}
@@ -368,25 +368,25 @@ void read_joystick(void *pvParameters)
 
 
 /* Changes the player's direction: will be applied in game_processing() */
-void turn_player(Position player, Direction direction)
+void turn_player(Position* player, Direction direction)
 {
 
 	switch (direction) {
 		case UP:
-		if (player.direction == LEFT || player.direction == RIGHT)
-		player.direction = direction;
+		if ((*player).direction == LEFT || (*player).direction == RIGHT)
+		(*player).direction = direction;
 		break;
 		case DOWN:
-		if (player.direction == LEFT || player.direction == RIGHT)
-		player.direction = direction;
+		if ((*player).direction == LEFT || (*player).direction == RIGHT)
+		(*player).direction = direction;
 		break;
 		case LEFT:
-		if (player.direction == UP || player.direction == DOWN)
-		player.direction = direction;
+		if ((*player).direction == UP || (*player).direction == DOWN)
+		(*player).direction = direction;
 		break;
 		case RIGHT:
-		if (player.direction == UP || player.direction == DOWN)
-		player.direction = direction;
+		if ((*player).direction == UP || (*player).direction == DOWN)
+		(*player).direction = direction;
 		break;
 	}
 }
