@@ -3,6 +3,8 @@
 #define MAX_TRAILER_LENGTH 10
 #define FLAG 0xFF
 #define ESCAPE 0xDD
+#define COMMA 0x2c
+#define DOT 0x2E
 
 typedef struct Turn {
 	int x;
