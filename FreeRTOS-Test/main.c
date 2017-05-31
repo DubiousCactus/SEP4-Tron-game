@@ -165,8 +165,8 @@ void game_processing(void *pvParameters)
 
 					if (playerOne.turns[i].x == playerOne.turns[i + 1].x) { //Draw vertical line
 
-						from = playerOne.turns[i].x;
-						to = playerOne.turns[i + 1].x;
+						from = playerOne.turns[i].y;
+						to = playerOne.turns[i + 1].y;
 
 						if (from > to) {
 							to = from;
@@ -183,12 +183,12 @@ void game_processing(void *pvParameters)
 
 					} else if (playerOne.turns[i].y == playerOne.turns[i + 1].y) { //Draw horizontal line
 
-						from = playerOne.turns[i].y;
-						to = playerOne.turns[i + 1].y;
+						from = playerOne.turns[i].x;
+						to = playerOne.turns[i + 1].x;
 
 						if (from > to) {
 							to = from;
-							from = playerOne.turns[i + 1].y;
+							from = playerOne.turns[i + 1].x;
 						}
 
 						//Draw line in gameState
@@ -359,7 +359,7 @@ void init_players()
 {
 
 	for (int i = 0; i < MAXTURNS + 1; i++) { //MAXTURNS + 1 because turn[0] is the init position, not a turn
-		playerOne.turns[i].y = -1;
+		playerOne.turns[i].x = -1;
 		playerOne.turns[i].y = -1;
 		playerTwo.turns[i].x = -1;
 		playerTwo.turns[i].y = -1;
