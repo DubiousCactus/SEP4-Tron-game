@@ -220,8 +220,8 @@ void game_processing(void *pvParameters)
 
 					if (playerOne.turns[i].x == playerOne.x) { //Draw vertical line
 
-						from = playerOne.turns[i].x;
-						to = playerOne.x;
+						from = playerOne.turns[i].y;
+						to = playerOne.y;
 
 						if (from > to) {
 							to = from;
@@ -238,12 +238,12 @@ void game_processing(void *pvParameters)
 
 					} else if (playerOne.turns[i].y == playerOne.y) { //Draw horizontal line
 
-						from = playerOne.turns[i].y;
-						to = playerOne.y;
+						from = playerOne.turns[i].x;
+						to = playerOne.x;
 
 						if (from > to) {
 							to = from;
-							from = playerOne.y;
+							from = playerOne.x;
 						}
 
 						//Draw line in gameState
