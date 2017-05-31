@@ -93,7 +93,7 @@ void make_frame(void *pvParameters)
 	}
 }
 
-void die(Position player)
+void die()
 {
 	//TODO	
 	com_send_bytes("DEAD!\n", 6);
@@ -101,7 +101,7 @@ void die(Position player)
 
 void move_player(Position player)
 {
-	switch (direction) {
+	switch (player.direction) {
 		case LEFT:
 			if (player.x > 0)
 				player.x--;
@@ -307,27 +307,23 @@ void read_joystick(void *pvParameters)
 		Down	= !(PINC>>0 & 0x01);
 		Pushed  = !(PIND>>3 & 0x01);
 
-		if (Down && (debounceCounter++ >= debounceThreshold)) {
+		if (Down){
 			direction = DOWN;
 			turnPlayer = 1;
-			debounceCounter = 0;
 			isPressing = 1;
-		} else if (Right && (debounceCounter++ >= debounceThreshold)) {
+		} else if (Right) {
 			direction = RIGHT;
 			turnPlayer = 1;
-			debounceCounter = 0;
 			isPressing = 1;
-		} else if (Up && (debounceCounter++ >= debounceThreshold)) {
+		} else if (Up) {
 			direction = UP;
 			turnPlayer = 1;
-			debounceCounter = 0;
 			isPressing = 1;
-		} else if (Left && (debounceCounter++ >= debounceThreshold)) {
+		} else if (Left) {
 			direction = LEFT;
 			turnPlayer = 1;
-			debounceCounter = 0;
 			isPressing = 1;
-		} else if (Pushed && (debounceCounter++ >= debounceThreshold)) {
+		} else if (Pushed) {
 			//TODO: pause game
 			debounceCounter = 0;
 		} else {
@@ -335,10 +331,11 @@ void read_joystick(void *pvParameters)
 			//debounceCounter = 0;
 		}
 
-		if (turnPlayer && isPressing == 0) {
+		if (turnPlayer && !isPressing && (++debounceCounter >= debounceThreshold)) {
 			com_send_bytes("move", 4);
 			turn_player(playerOne, direction);
 			turnPlayer = 0;
+			debounceCounter = 0;
 		}
 	}
 }
