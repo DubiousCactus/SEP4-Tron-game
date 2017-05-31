@@ -281,6 +281,11 @@ void game_processing(void *pvParameters)
 
 				/* Move players in their current direction */
 				move_player(&player);
+
+				if (p == 0)
+					playerOne = player;
+				else
+					playerTwo = player;
 			}
 
 			vTaskDelay(1000);
@@ -427,11 +432,11 @@ void init_players()
 	turn0.y = 5;
 	playerOne.turns[0] = turn0;
 
-	playerTwo.x = 10;
+	playerTwo.x = 14;
 	playerTwo.y = 5;
 	playerTwo.direction = LEFT;
 	turn0;
-	turn0.x = 10;
+	turn0.x = 14;
 	turn0.y = 5;
 	playerTwo.turns[0] = turn0;
 }
