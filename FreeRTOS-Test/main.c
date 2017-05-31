@@ -31,7 +31,7 @@ static uint16_t frame_buffer[14] = {0};
 
 //Shared variables
 static int gameState[14][10] = {{0}};
-static Position playerOne, playerTwo;
+static Player playerOne, playerTwo;
 static uint8_t gameOver = 0;
 
 //Semaphores for the shared variables
@@ -113,7 +113,7 @@ void die()
 	com_send_bytes("DEAD!\n", 6);
 }
 
-void move_player(Position* player)
+void move_player(Player* player)
 {
 	switch ((*player).direction) {
 		case LEFT:
@@ -146,18 +146,6 @@ void game_processing(void *pvParameters)
 	*/
 
 	bool collision = false;
-
-	playerOne.x = 5;
-	playerOne.y = 5;
-	playerOne.direction = LEFT;
-	Turn turn0;
-	turn0.x = 5;
-	turn0.y = 5;
-	playerOne.turns[0] = turn0;
-
-	playerTwo.x = 10;
-	playerTwo.y = 5;
-	playerTwo.direction = DOWN;
 
 	for(;;) {
 
@@ -319,27 +307,60 @@ void read_joystick(void *pvParameters)
 
 
 /* Changes the player's direction: will be applied in game_processing() */
-void turn_player(Position* player, Direction direction)
+void turn_player(Player *player, Direction direction)
 {
+
+	if ((*player).direction != direction) { //New turn !
+		
+	}
 
 	switch (direction) {
 		case UP:
-		if ((*player).direction == LEFT || (*player).direction == RIGHT)
-		(*player).direction = direction;
-		break;
+			if ((*player).direction == LEFT || (*player).direction == RIGHT)
+			(*player).direction = direction;
+			break;
 		case DOWN:
-		if ((*player).direction == LEFT || (*player).direction == RIGHT)
-		(*player).direction = direction;
-		break;
+			if ((*player).direction == LEFT || (*player).direction == RIGHT)
+			(*player).direction = direction;
+			break;
 		case LEFT:
-		if ((*player).direction == UP || (*player).direction == DOWN)
-		(*player).direction = direction;
-		break;
+			if ((*player).direction == UP || (*player).direction == DOWN)
+			(*player).direction = direction;
+			break;
 		case RIGHT:
-		if ((*player).direction == UP || (*player).direction == DOWN)
-		(*player).direction = direction;
-		break;
+			if ((*player).direction == UP || (*player).direction == DOWN)
+			(*player).direction = direction;
+			break;
 	}
+}
+
+/* Initialize the players' positions and turns */
+void init_players()
+{
+
+	for (int i = 0; i < MAXTURNS + 1; i++) {
+		playerOne.turns[i] = -1;
+		playerTwo.turns[i] = -1;
+	}
+
+	playerOne.turnsCount = 0;
+	playerTwo.turnsCount = 0;
+
+	playerOne.x = 0;
+	playerOne.y = 5;
+	playerOne.direction = RIGHT;
+	Turn turn0;
+	turn0.x = 0;
+	turn0.y = 5;
+	playerOne.turns[0] = turn0;
+
+	playerTwo.x = 10;
+	playerTwo.y = 5;
+	playerTwo.direction = LEFT;
+	turn0;
+	turn0.x = 10;
+	turn0.y = 5;
+	playerTwo.turns[0] = turn0;
 }
 
 // Prepare shift register setting SER = 1
@@ -411,6 +432,8 @@ int main(void)
 	xPlayerOneSemaphore = xSemaphoreCreateMutex();
 	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
 	xGameOverSemaphore = xSemaphoreCreateMutex();
+
+	init_players();
 
 	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskGameProcessing = xTaskCreate(game_processing, (const char*)"Game processing", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
