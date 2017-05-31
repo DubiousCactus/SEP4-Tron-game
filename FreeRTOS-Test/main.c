@@ -338,36 +338,50 @@ void read_joystick(void *pvParameters)
 /* Changes the player's direction: will be applied in game_processing() */
 void turn_player(Player *player, Direction direction)
 {
+	int newX, newY;
 
+	switch (direction) {
+		case UP:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
+				(*player).direction = direction;
+				newY = (*player).y - 1;
+				newX = (*player).x;
+			}
+			break;
+		case DOWN:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
+				(*player).direction = direction;
+				newY = (*player).y + 1;
+				newX = (*player).x;
+			}
+			break;
+		case LEFT:
+			if ((*player).direction == UP || (*player).direction == DOWN) {
+				(*player).direction = direction;
+				newX = (*player).x - 1;
+				newY = (*player).y;
+			}
+			break;
+		case RIGHT:
+			if ((*player).direction == UP || (*player).direction == DOWN) {
+				(*player).direction = direction;
+				newX = (*player).x + 1;
+				newY = (*player).y;
+			}
+			break;
+	}
+	
 	if ((*player).direction != direction) { //New turn !
 		(*player).turnsCount++;
 
 		if ((*player).turnsCount < MAXTURNS && (*player).turns[(*player).turnsCount].x == -1) { //Free turn slot
-			(*player).turns[(*player).turnsCount].x = (*player).x;
-			(*player).turns[(*player).turnsCount].y = (*player).y;
+			(*player).turns[(*player).turnsCount].x = newX;
+			(*player).turns[(*player).turnsCount].y = newY;
 		} else {
 			//TODO
 		}
 	}
 
-	switch (direction) {
-		case UP:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-				(*player).direction = direction;
-			break;
-		case DOWN:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-				(*player).direction = direction;
-			break;
-		case LEFT:
-			if ((*player).direction == UP || (*player).direction == DOWN)
-				(*player).direction = direction;
-			break;
-		case RIGHT:
-			if ((*player).direction == UP || (*player).direction == DOWN)
-				(*player).direction = direction;
-			break;
-	}
 }
 
 /* Initialize the players' positions and turns */
@@ -375,7 +389,7 @@ void init_players()
 {
 
 	for (int i = 0; i < MAXTURNS + 1; i++) {
-		playerOne.turns[i].x = -1;
+		playerOne.turns[i].y = -1;
 		playerOne.turns[i].y = -1;
 		playerTwo.turns[i].x = -1;
 		playerTwo.turns[i].y = -1;
