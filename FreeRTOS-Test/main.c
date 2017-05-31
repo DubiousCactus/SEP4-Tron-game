@@ -236,8 +236,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((playerId == 1 && gameState[j][(*player).y] == 2)
-						   || (playerId == 2 && gameState[j][(*player).y] == 1) //Collision with player 2 !
+					if ((playerId == 1 && gameState[j][(*player).y] == 2) || (playerId == 2 && gameState[j][(*player).y] == 1)) //Collision with player 2 !
 						collision = true;
 					else
 						gameState[j][(*player).y] = 1;
@@ -257,7 +256,7 @@ void game_processing(void *pvParameters)
 	/* Populate gameState from the players' positions and tracks:
 	* Start at turn[i] to compare with turn[i - 1] for each player
 	*/
-
+	Player player;
 	bool collision = false;
 
 	for(;;) {
