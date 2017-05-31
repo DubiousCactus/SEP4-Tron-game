@@ -71,11 +71,12 @@ void communicate_serial(void *pvParameters)
 		/*Constantly checking if game is over*/
 		if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
 			/*Sending data to the PC when score is changed*/
-			if (gameOver == true) {
+			if (gameOver == true)
 				com_send_bytes((uint8_t *)"GAME OVER\n", 10);
-			}
+			
 			xSemaphoreGive(xGameOverSemaphore);
 		}
+
 		vTaskDelay(20);
 	}
 
@@ -117,21 +118,21 @@ void move_player(Player* player)
 {
 	switch ((*player).direction) {
 		case LEFT:
-		if ((*player).x > 0)
-		(*player).x--;
-		break;
+			if ((*player).x > 0)
+				(*player).x--;
+			break;
 		case RIGHT:
-		if ((*player).x < 14)
-		(*player).x++;
-		break;
+			if ((*player).x < 14)
+				(*player).x++;
+			break;
 		case UP:
-		if ((*player).y > 0)
-		(*player).y--;
-		break;
+			if ((*player).y > 0)
+				(*player).y--;
+			break;
 		case DOWN:
-		if ((*player).y < 10)
-		(*player).y++;
-		break;
+			if ((*player).y < 10)
+				(*player).y++;
+			break;
 	}
 
 	//TODO: Figure out the front collision detection and death mechanism
@@ -240,7 +241,6 @@ void game_processing(void *pvParameters)
 	}
 
 	vTaskDelete(NULL);
-
 }
 
 
@@ -248,7 +248,6 @@ void read_joystick(void *pvParameters)
 {
 	//The parameters are not used
 	( void ) pvParameters;
-
 
 	uint8_t Right;
 	uint8_t Left;
@@ -285,10 +284,10 @@ void read_joystick(void *pvParameters)
 			direction = LEFT;
 			turnPlayer = 1;
 			isPressing = 1;
-			} else if (Pushed) {
+		} else if (Pushed) {
 			//TODO: pause game
 			debounceCounter = 0;
-			} else {
+		} else {
 			isPressing = 0;
 			//debounceCounter = 0;
 		}
@@ -299,8 +298,10 @@ void read_joystick(void *pvParameters)
 			turnPlayer = 0;
 			debounceCounter = 0;
 		}
+
 		vTaskDelay(20);
 	}
+	
 	vTaskDelete(NULL);
 }
 
@@ -317,19 +318,19 @@ void turn_player(Player *player, Direction direction)
 	switch (direction) {
 		case UP:
 			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-			(*player).direction = direction;
+				(*player).direction = direction;
 			break;
 		case DOWN:
 			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-			(*player).direction = direction;
+				(*player).direction = direction;
 			break;
 		case LEFT:
 			if ((*player).direction == UP || (*player).direction == DOWN)
-			(*player).direction = direction;
+				(*player).direction = direction;
 			break;
 		case RIGHT:
 			if ((*player).direction == UP || (*player).direction == DOWN)
-			(*player).direction = direction;
+				(*player).direction = direction;
 			break;
 	}
 }
