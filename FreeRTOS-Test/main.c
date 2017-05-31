@@ -50,7 +50,7 @@ void communicate_serial(void *pvParameters)
 	_received_chars_queue = xQueueCreate(_COM_RX_QUEUE_LENGTH, (unsigned portBASE_TYPE) sizeof (uint8_t));
 	init_com(_received_chars_queue);
 
-	while (1) {
+	for(;;){
 
 		/*Constantly checking data coming from the PC*/
 		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
@@ -76,26 +76,34 @@ void communicate_serial(void *pvParameters)
 			}
 			xSemaphoreGive(xGameOverSemaphore);
 		}
-
+		vTaskDelay(20);
 	}
+
+	vTaskDelete(NULL);
 }
 
 /* TODO: protect frame_buffer with a mutex */
 void make_frame(void *pvParameters)
 {
-	/* Create frame from gameState */
-	for (int i = 0; i < 14; i++) { //For each column
-		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
-			if (gameState[i][j] != 0) { //Add up
-				frame_buffer[i]	+= pow(2, j);
+
+	for(;;) {
+		/* Create frame from gameState */
+		for (int i = 0; i < 14; i++) { //For each column
+			for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+				if (gameState[i][j] != 0) { //Add up
+					frame_buffer[i]	+= pow(2, j);
+				}
 			}
 		}
+		vTaskDelay(5);
 	}
+
+	vTaskDelete(NULL);
 }
 
 void die()
 {
-	//TODO	
+	//TODO
 	com_send_bytes("DEAD!\n", 6);
 }
 
@@ -103,21 +111,21 @@ void move_player(Position player)
 {
 	switch (player.direction) {
 		case LEFT:
-			if (player.x > 0)
-				player.x--;
-			break;
+		if (player.x > 0)
+		player.x--;
+		break;
 		case RIGHT:
-			if (player.x < 14)
-				player.x++;
-			break;
+		if (player.x < 14)
+		player.x++;
+		break;
 		case UP:
-			if (player.y > 0)
-				player.y--;
-			break;
+		if (player.y > 0)
+		player.y--;
+		break;
 		case DOWN:
-			if (player.y < 10)
-				player.y++;
-			break;
+		if (player.y < 10)
+		player.y++;
+		break;
 	}
 
 	//TODO: Figure out the front collision detection and death mechanism
@@ -133,152 +141,161 @@ void game_processing(void *pvParameters)
 
 	bool collision = false;
 
-	while(!collision) {
-		
-		/* Erase player one */
-		for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-		if (gameState[i][j] == 1)
-		gameState[i][j] = 0;
+	playerOne.x = 4;
+	playerOne.y = 4;
+	playerOne.direction = LEFT;
+	Turn turn0;
+	turn0.x = 5;
+	turn0.y = 5;
+	playerOne.turns[0] = turn0;
 
-		if (sizeof(playerOne.turns) < 2) { //Didn't turn yet !
+	playerTwo.x = 10;
+	playerTwo.y = 5;
+	playerTwo.direction = DOWN;
 
-			if (playerOne.x == playerOne.turns[0].x) { //Vertical line
+	for(;;) {
 
-				//Turn on LEDs for this line
-				for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
-					if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
-						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							gameOver = 1;
-							xSemaphoreGive(xGameOverSemaphore);
-						}
-						} else {
-						gameState[playerOne.turns[0].x][j] = 1;
-					}
-				}
 
-				} else { //Horizontal line
-				
-				for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
-					if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
-						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							gameOver = 1;
-							xSemaphoreGive(xGameOverSemaphore);
-						}
-						} else {
-						gameState[j][playerOne.turns[0].y] = 1;
-					}
-				}
-			}
-			} else {
+		while(!collision) {
+			
+			/* Erase player one */
+			for (int i = 0; i < 14; i++)
+				for (int j = 0; j < 10; j++)
+				if (gameState[i][j] == 1)
+					gameState[i][j] = 0;
 
-			/* Draw player one and check collisions with player two */
-			for (int i = 1; i < sizeof(playerOne.turns); i++) {
-				if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
+			if ((sizeof(playerOne.turns) / sizeof(playerOne.turns[0])) < 2) { //Didn't turn yet !
+
+				if (playerOne.x == playerOne.turns[0].x) { //Vertical line
 
 					//Turn on LEDs for this line
-					for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
-						if (gameState[playerOne.turns[i].x][j] == 2) { //Collision with player two !!
-							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)) {
-								gameOver = 1;
-								xSemaphoreGive(xGameOverSemaphore);
-							}
-							} else {
-							gameState[playerOne.turns[i].x][j] = 1;
-						}
-					}
-
-					} else { //Horizontal line
-					
-					for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
-						if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
-							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								gameOver = 1;
-								xSemaphoreGive(xGameOverSemaphore);
-							}
-							} else {
-							gameState[j][playerOne.turns[i].y] = 1;
-						}
-					}
-				}
-			}
-		}
-
-		/* Erase player two */
-		for (int i = 0; i < 14; i++)
-		for (int j = 0; j < 10; j++)
-		if (gameState[i][j] == 2)
-		gameState[i][j] = 0;
-
-		if (sizeof(playerTwo.turns) < 2) { //Didn't turn yet !
-
-			if (playerTwo.x == playerTwo.turns[0].x) { //Vertical line
-
-				//Turn on LEDs for this line
-				for (int j = playerTwo.y; j <= playerTwo.turns[0].y; j++) {
-					if (gameState[playerTwo.turns[0].x][j] == 2) { //Collision with player two !!
-						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							gameOver = 1;
-							xSemaphoreGive(xGameOverSemaphore);
-						}
+					for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
+						if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
+							collision = 1;
 						} else {
-						gameState[playerTwo.turns[0].x][j] = 1;
+							gameState[playerOne.turns[0].x][j] = 1;
+						}
 					}
-				}
 
 				} else { //Horizontal line
-				
-				for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
-					if (gameState[j][playerTwo.turns[0].y] == 2) { //Collision with player two !!
-						if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-							gameOver = 1;
-							xSemaphoreGive(xGameOverSemaphore);
-						}
+					
+					for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
+						if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
+							collision = 1;
 						} else {
-						gameState[j][playerTwo.turns[0].y] = 1;
+							gameState[j][playerOne.turns[0].y] = 1;
+						}
 					}
 				}
-			}
 			} else {
 
-			/* Draw player two and check collisions with player one */
-			for (int i = 1; i < sizeof(playerTwo.turns); i++) {
-				if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
+				/* Draw player one and check collisions with player two */
+				for (int i = 1; i < (sizeof(playerOne.turns) / sizeof(playerOne.turns[0])); i++) {
+					if (playerOne.turns[i].x == playerOne.turns[i - 1].x) { //Vertical line
 
-					//Turn on LEDs for this line
-					for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
-						if (gameState[playerTwo.turns[i].x][j] == 2) { //Collision with player one !!
-							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								gameOver = 1;
-								xSemaphoreGive(xGameOverSemaphore);
-							}
+						//Turn on LEDs for this line
+						for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
+							if (gameState[playerOne.turns[i].x][j] == 2) { //Collision with player two !!
+								collision = 1;
 							} else {
-							gameState[playerTwo.turns[i].x][j] = 1;
+								gameState[playerOne.turns[i].x][j] = 1;
+							}
 						}
-					}
 
 					} else { //Horizontal line
-					
-					for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
-						if (gameState[j][playerTwo.turns[i].y] == 2) { //Collision with player one !!
-							if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
-								gameOver = 1;
-								xSemaphoreGive(xGameOverSemaphore);
-							}
+						
+						for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
+							if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
+								collision = 1;
 							} else {
-							gameState[j][playerTwo.turns[i].y] = 1;
+								gameState[j][playerOne.turns[i].y] = 1;
+							}
 						}
 					}
 				}
 			}
+
+			/* Erase player two */
+			for (int i = 0; i < 14; i++)
+				for (int j = 0; j < 10; j++)
+					if (gameState[i][j] == 2)
+						gameState[i][j] = 0;
+			//
+			//if ((sizeof(playerTwo.turns) / sizeof(playerTwo.turns[0])) < 2) { //Didn't turn yet !
+			//
+			//if (playerTwo.x == playerTwo.turns[0].x) { //Vertical line
+			//
+			////Turn on LEDs for this line
+			//for (int j = playerTwo.y; j <= playerTwo.turns[0].y; j++) {
+			//if (gameState[playerTwo.turns[0].x][j] == 2) { //Collision with player two !!
+			//if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
+			//gameOver = 1;
+			//xSemaphoreGive(xGameOverSemaphore);
+			//}
+			//} else {
+			//gameState[playerTwo.turns[0].x][j] = 1;
+			//}
+			//}
+			//
+			//} else { //Horizontal line
+			//
+			//for (int j = playerTwo.x; j <= playerTwo.turns[0].x; j++) {
+			//if (gameState[j][playerTwo.turns[0].y] == 2) { //Collision with player two !!
+			//if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
+			//gameOver = 1;
+			//xSemaphoreGive(xGameOverSemaphore);
+			//}
+			//} else {
+			//gameState[j][playerTwo.turns[0].y] = 1;
+			//}
+			//}
+			//}
+			//} else {
+			//
+			///* Draw player two and check collisions with player one */
+			//for (int i = 1; i < (sizeof(playerTwo.turns) / sizeof(playerTwo.turns[0])); i++) {
+			//if (playerTwo.turns[i].x == playerTwo.turns[i - 1].x) { //Vertical line
+			//
+			////Turn on LEDs for this line
+			//for (int j = playerTwo.turns[i - 1].y; j <= playerTwo.turns[i].y; j++) {
+			//if (gameState[playerTwo.turns[i].x][j] == 2) { //Collision with player one !!
+			//if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
+			//gameOver = 1;
+			//xSemaphoreGive(xGameOverSemaphore);
+			//}
+			//} else {
+			//gameState[playerTwo.turns[i].x][j] = 1;
+			//}
+			//}
+			//
+			//} else { //Horizontal line
+			//
+			//for (int j = playerTwo.turns[i - 1].x; j <= playerTwo.turns[i].x; j++) {
+			//if (gameState[j][playerTwo.turns[i].y] == 2) { //Collision with player one !!
+			//if(xSemaphoreTake(xGameOverSemaphore, (TickType_t) 5)){
+			//gameOver = 1;
+			//xSemaphoreGive(xGameOverSemaphore);
+			//}
+			//} else {
+			//gameState[j][playerTwo.turns[i].y] = 1;
+			//}
+			//}
+			//}
+			//}
+			//}
+
+			/* Move players in their current direction */
+			move_player(playerOne);
+			//move_player(playerTwo);
+
+			vTaskDelay(1000);
 		}
 
-		/* Move players in their current direction */
-		move_player(playerOne);
-		move_player(playerTwo);
+		die();
 	}
 
-	die();
+	vTaskDelete(NULL);
+
 }
 
 
@@ -299,7 +316,7 @@ void read_joystick(void *pvParameters)
 	uint8_t turnPlayer = 0;
 	uint8_t isPressing = 0;
 
-	while (1) {
+	for (;;) {
 		/*Constantly checking joystick state*/
 		Right	= !(PINC>>1 & 0x01);
 		Left	= !(PINC>>7 & 0x01);
@@ -311,22 +328,22 @@ void read_joystick(void *pvParameters)
 			direction = DOWN;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Right) {
+			} else if (Right) {
 			direction = RIGHT;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Up) {
+			} else if (Up) {
 			direction = UP;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Left) {
+			} else if (Left) {
 			direction = LEFT;
 			turnPlayer = 1;
 			isPressing = 1;
-		} else if (Pushed) {
+			} else if (Pushed) {
 			//TODO: pause game
 			debounceCounter = 0;
-		} else {
+			} else {
 			isPressing = 0;
 			//debounceCounter = 0;
 		}
@@ -337,7 +354,9 @@ void read_joystick(void *pvParameters)
 			turnPlayer = 0;
 			debounceCounter = 0;
 		}
+		vTaskDelay(20);
 	}
+	vTaskDelete(NULL);
 }
 
 
@@ -436,7 +455,9 @@ int main(void)
 	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
 	xGameOverSemaphore = xSemaphoreCreateMutex();
 
-	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+	//BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+	BaseType_t taskGameProcessing = xTaskCreate(game_processing, (const char*)"Game processing", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+	BaseType_t taskMakeFrame = xTaskCreate(make_frame, (const char*)"Make frame", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL );
 
 
 	// Start the display handler timer
