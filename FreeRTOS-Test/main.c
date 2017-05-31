@@ -147,6 +147,7 @@ void game_processing(void *pvParameters)
 	*/
 
 	bool collision = false;
+	int from, to;
 
 	for(;;) {
 
@@ -157,110 +158,94 @@ void game_processing(void *pvParameters)
 				for (int j = 0; j < 10; j++)
 					if (gameState[i][j] == 1)
 						gameState[i][j] = 0;
-			
-			if (playerOne.turnsCount < 1) { //Didn't turn yet !
-
-				if (playerOne.x == playerOne.turns[0].x) { //Vertical line
-
-					int from, to;
-					
-					if (playerOne.y < playerOne.turns[0].y) {
-						from = playerOne.y;
-						to = playerOne.turns[0].y;
-					} else {
-						from = playerOne.turns[0].y;
-						to = playerOne.y;
-					}
-
-					//Turn on LEDs for this line
-					for (int j = from; j <= to; j++) {
-						if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
-							collision = 1;
-						} else {
-							gameState[playerOne.turns[0].x][j] = 1;
-						}
-					}
-
-				} else if (playerOne.y == playerOne.turns[0].y) { //Horizontal line
 	
-					int from, to;
-					
-					if (playerOne.x < playerOne.turns[0].x) {
-						from = playerOne.x;
-						to = playerOne.turns[0].x;
-					} else {
-						from = playerOne.turns[0].x;
+			for (int i = 0; i <= playerOne.turnsCount; i++) {
+
+				if (i < playerOne.turnsCount) { //Processing every turn
+
+					if (playerOne.turns[i].x == playerOne.turns[i + 1].x) { //Draw vertical line
+
+						from = playerOne.turns[i].x;
+						to = playerOne.turns[i + 1].x;
+
+						if (from > to) {
+							to = from;
+							from = playerOne.turns[i + 1].y;
+						}
+
+						//Draw line in gameState
+						for (int j = from; j <= to; j++) {
+							if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player 2 !
+								collision = true;
+							else
+								gameState[playerOne.turns[i].x][j] = 1;
+						}
+
+					} else if (playerOne.turns[i].y == playerOne.turns[i + 1].y) { //Draw horizontal line
+
+						from = playerOne.turns[i].y;
+						to = playerOne.turns[i + 1].y;
+
+						if (from > to) {
+							to = from;
+							from = playerOne.turns[i + 1].y;
+						}
+
+						//Draw line in gameState
+						for (int j = from; j <= to; j++) {
+							if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player 2 !
+								collision = true;
+							else
+								gameState[j][playerOne.turns[i].y] = 1;
+						}
+
+					}
+
+				} else { //Processing the current position
+
+					if (playerOne.turns[i].x == playerOne.x) { //Draw vertical line
+
+						from = playerOne.turns[i].x;
 						to = playerOne.x;
-					}
-				
-					for (int j = from; j <= to; j++) {
-						if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
-							collision = 1;
-						} else {
-							gameState[j][playerOne.turns[0].y] = 1;
-						}
-					}
-				}
-			} else {
 
-				/* Draw player one and check collisions with player two */
-				for (int i = 0; i < playerOne.turnsCount; i++) {
-					Turn turn;
-					turn.x = playerOne.turns[i].x;
-					turn.y = playerOne.turns[i].y;
-
-					if (i == playerOne.turnsCount) { //Current position, all turns were drawn
-						turn.x = playerOne.x;
-						turn.y = playerOne.y;
-					}
-
-					if (turn.x == playerOne.turns[i - 1].x) { //Vertical line
-
-						int from, to;
-
-						if (playerOne.turns[i - 1].y < turn.y) {
-							from = playerOne.turns[i - 1].y;
-							to = turn.y;
-						} else {
-							from = turn.y;
-							to = playerOne.turns[i - 1].y;
+						if (from > to) {
+							to = from;
+							from = playerOne.y;
 						}
 
-						//Turn on LEDs for this line
+						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[turn.x][j] == 2) { //Collision with player two !!
-								collision = 1;
-							} else {
-								gameState[turn.x][j] = 1;
-							}
+							if (gameState[playerOne.x][j] == 2) //Collision with player 2 !
+								collision = true;
+							else
+								gameState[playerOne.x][j] = 1;
 						}
 
-					} else { //Horizontal line
-						
-						int from, to;
+					} else if (playerOne.turns[i].y == playerOne.y) { //Draw horizontal line
 
-						if (playerOne.turns[i - 1].x < turn.x) {
-							from = playerOne.turns[i - 1].x;
-							to = turn.x;
-						} else {
-							from = turn.x;
-							to = playerOne.turns[i - 1].x;
+						from = playerOne.turns[i].y;
+						to = playerOne.y;
+
+						if (from > to) {
+							to = from;
+							from = playerOne.y;
 						}
 
+						//Draw line in gameState
 						for (int j = from; j <= to; j++) {
-							if (gameState[j][turn.y] == 2) { //Collision with player two !!
-								collision = 1;
-							} else {
-								gameState[j][turn.y] = 1;
-							}
+							if (gameState[j][playerOne.y] == 2) //Collision with player 2 !
+								collision = true;
+							else
+								gameState[j][playerOne.y] = 1;
 						}
+
 					}
+
 				}
 			}
 
 			/* Move players in their current direction */
 			move_player(&playerOne);
-			//move_player(playerTwo);
 
 			vTaskDelay(1000);
 		}
@@ -338,50 +323,35 @@ void read_joystick(void *pvParameters)
 /* Changes the player's direction: will be applied in game_processing() */
 void turn_player(Player *player, Direction direction)
 {
-	int newX, newY;
-
-	switch (direction) {
-		case UP:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
-				(*player).direction = direction;
-				newY = (*player).y - 1;
-				newX = (*player).x;
-			}
-			break;
-		case DOWN:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
-				(*player).direction = direction;
-				newY = (*player).y + 1;
-				newX = (*player).x;
-			}
-			break;
-		case LEFT:
-			if ((*player).direction == UP || (*player).direction == DOWN) {
-				(*player).direction = direction;
-				newX = (*player).x - 1;
-				newY = (*player).y;
-			}
-			break;
-		case RIGHT:
-			if ((*player).direction == UP || (*player).direction == DOWN) {
-				(*player).direction = direction;
-				newX = (*player).x + 1;
-				newY = (*player).y;
-			}
-			break;
-	}
-	
 	if ((*player).direction != direction) { //New turn !
 		(*player).turnsCount++;
 
 		if ((*player).turnsCount < MAXTURNS && (*player).turns[(*player).turnsCount].x == -1) { //Free turn slot
-			(*player).turns[(*player).turnsCount].x = newX;
-			(*player).turns[(*player).turnsCount].y = newY;
+			(*player).turns[(*player).turnsCount].x = (*player).x;
+			(*player).turns[(*player).turnsCount].y =  (*player).y;
 		} else {
 			//TODO
 		}
 	}
 
+	switch (direction) {
+		case UP:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT)
+				(*player).direction = direction;
+			break;
+		case DOWN:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT)
+				(*player).direction = direction;
+			break;
+		case LEFT:
+			if ((*player).direction == UP || (*player).direction == DOWN)
+				(*player).direction = direction;
+			break;
+		case RIGHT:
+			if ((*player).direction == UP || (*player).direction == DOWN)
+				(*player).direction = direction;
+			break;
+	}
 }
 
 /* Initialize the players' positions and turns */
