@@ -5,6 +5,7 @@
 #define ESCAPE 0xDD
 #define COMMA 0x2c
 #define DOT 0x2E
+#define STUFFED_ZEROS 8 
 
 typedef struct Turn {
 	int x;

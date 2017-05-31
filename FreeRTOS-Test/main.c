@@ -41,11 +41,127 @@ static SemaphoreHandle_t xPlayerTwoSemaphore = NULL;
 
 static Score score;
 
+
+void communicate_serial_no_protocol(void *pvParameters)
+{
+	//Variables
+	uint8_t data[] = "";
+
+	_received_chars_queue = xQueueCreate(_COM_RX_QUEUE_LENGTH, (unsigned portBASE_TYPE) sizeof (uint8_t));
+	init_com(_received_chars_queue);
+
+	for(;;){
+
+		/*Constantly checking data coming from the PC*/
+		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
+
+			switch (data[0]) {
+				case 0x41 :
+					turn_player(&playerTwo, LEFT);		//A
+					break;
+				case 0x61 :
+					turn_player(&playerTwo, LEFT);		//a
+					break;
+				case 0x57 :
+					turn_player(&playerTwo, UP);		//W
+					break;
+				case 0x77 :
+					turn_player(&playerTwo, UP);		//w
+					break;
+				case 0x44 :
+					turn_player(&playerTwo, RIGHT);		//D
+					break;
+				case 0x64 :
+					turn_player(&playerTwo, RIGHT);		//d
+					break;
+				case 0x53 :
+					turn_player(&playerTwo, DOWN);		//S
+					break;
+				case 0x73 :
+					turn_player(&playerTwo, DOWN);		//s
+					break;
+			}
+		}
+
+		/*Constantly checking if game is over*/
+		if (xSemaphoreTake(xGameOverSemaphore, (TickType_t) 10)) {
+			/*Sending data to the PC when score is changed*/
+			if (gameOver == true)
+				com_send_bytes((uint8_t *)"GAME OVER\n", 10);
+
+			xSemaphoreGive(xGameOverSemaphore);
+		}
+
+		vTaskDelay(20);
+	}
+
+	vTaskDelete(NULL);
+}
+
+
+uint8_t* crc_check(uint8_t buffer[], uint8_t size) {
+	int polynomial[9] = {1,1,1,0,0,0,0,0,1};
+	int nbBits = size * 8 + STUFFED_ZEROS; //Length of frame: nb bytes x 8 bits + stuffed zeros
+	int frame[nbBits];
+	int n = 0, k = 0, l = 7;
+
+	for(int i = (nbBits) - 1; i > 7; i--) { //From the last cell to the start of the stuffed zeros
+		if(k == 8) { //If we converted the whole byte, go to the next
+			n++;
+			k = 0;
+			l = 7;
+		}
+
+		frame[i] = (buffer[n] >> l) & 1; //Convert a byte, bit by bit
+		k++;
+		l--;
+	}
+
+	for(int i = 7; i >= 0; i--) { //Fill up the last part of the frame with the stuffed zeros
+		frame[i] = 0;
+	}
+
+
+	bool xoring = false;
+	int bitsToBeXored = 9;
+	int xorBack = -1;
+	int xoredBits[9] = {0};
+
+	for(int i = nbBits - 1; i >= 0; i--) { //Through the whole frame
+		if(frame[i] == 1 && !xoring) { //First 1 found after last division
+			//Divide
+			xoring = true; //Start xoring
+		}
+
+		if(xoring) { //While xoring
+			int result = frame[i] ^ polynomial[bitsToBeXored - 1]; //XOR of frame's bit + polynomial's bit (synchronized)
+			frame[i] = result; //Replace the frame's bit by the XORed value
+			xoredBits[bitsToBeXored - 1] = result; //Fill up the result array
+
+			if(result == 1 && xorBack == -1) { //If the FIRST result is a one, we set the index to XOR back
+				xorBack = i;
+			}
+
+			bitsToBeXored--;
+			if(bitsToBeXored == 0) { //We XORed 9 bits (the whole polynomial), reset everything
+				bitsToBeXored = 9;
+				xoring = false;
+				i = xorBack; //Jump back to the first 1 from last result
+				xorBack = -1;
+			}
+		}
+	}
+
+	return xoredBits;
+}
+
+
 void communicate_serial(void *pvParameters)
 {
 	//Variables
 	uint8_t data[] = {0};
 	ProtocolState state = IDLE;
+	ProtocolState escapeCallback = IDLE:
 	int payload_length = 0;
 	int parsed_length = 0;
 	int parsed_trailer = 0;
@@ -59,7 +175,7 @@ void communicate_serial(void *pvParameters)
 		
 	for(;;){
 
-		data[] = {0};
+		data = {0};
 		state = IDLE;
 		payload_length = 0;
 		parsed_length = 0;
@@ -85,6 +201,7 @@ void communicate_serial(void *pvParameters)
 					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
 					if (data[0] == ESCAPE) {
 						state = ESC;
+						escapeCallback = HEADER;
 					} else if (data[0] == FLAG) {
 						state = ERROR;
 					} else if (data[0] == DOT) {
@@ -102,6 +219,7 @@ void communicate_serial(void *pvParameters)
 						xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
 					} else if (data[0] == ESCAPE) {
 						state = ESC;
+						escapeCallback = PAYLOAD;
 					} else if (data[0] == FLAG) {
 						state = ERROR;
 					} else if (payload_length == 0) {
@@ -114,6 +232,7 @@ void communicate_serial(void *pvParameters)
 					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
 					if (data[0] == ESCAPE) {
 						state = ESC;
+						escapeCallback = TRAILER;
 					} else if (data[0] == FLAG) {
 						state = FRAME_VALIDATION;
 					} else {
@@ -121,14 +240,14 @@ void communicate_serial(void *pvParameters)
 					}
 					break;
 				case ESC:
-					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
-					
+					state = escapeCallback;
 					break;
 				case ERROR:
-
+					//send NACK
 					break;
 				case FRAME_VALIDATION:
 					frame_validated = true;
+					//send ACK
 					break;
 				case default:
 					state = ERROR;
@@ -562,7 +681,7 @@ int main(void)
 	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskGameProcessing = xTaskCreate(game_processing, (const char*)"Game processing", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskMakeFrame = xTaskCreate(make_frame, (const char*)"Make frame", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL );
-	BaseType_t taskCommunicateSerial = xTaskCreate(communicate_serial, (const char*)"Communicate serial", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+	BaseType_t taskCommunicateSerialNoProto = xTaskCreate(communicate_serial_no_protocol, (const char*)"Communicate serial no protocol", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 
 	// Start the display handler timer
 	init_display_timer(handle_display);
