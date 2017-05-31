@@ -338,7 +338,39 @@ void read_joystick(void *pvParameters)
 /* Changes the player's direction: will be applied in game_processing() */
 void turn_player(Player *player, Direction direction)
 {
-	if ((*player).direction != direction) { //New turn !
+	uint8_t validTurn = false, doTurn = false;
+
+	if ((*player).direction != direction)
+		doTurn = true;
+
+	switch (direction) {
+		case UP:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
+				(*player).direction = direction;
+				validTurn = true;
+			}
+			break;
+		case DOWN:
+			if ((*player).direction == LEFT || (*player).direction == RIGHT) {
+				(*player).direction = direction;
+				validTurn = true;
+			}
+			break;
+		case LEFT:
+			if ((*player).direction == UP || (*player).direction == DOWN) {
+				(*player).direction = direction;
+				validTurn = true;
+			}
+			break;
+		case RIGHT:
+			if ((*player).direction == UP || (*player).direction == DOWN) {
+				(*player).direction = direction;
+				validTurn = true;
+			}
+			break;
+	}
+
+	if (doTurn && validTurn) { //New turn !
 		(*player).turnsCount++;
 
 		if ((*player).turnsCount < MAXTURNS && (*player).turns[(*player).turnsCount].x == -1) { //Free turn slot
@@ -349,25 +381,6 @@ void turn_player(Player *player, Direction direction)
 		}
 
 		move_player(player);
-	}
-
-	switch (direction) {
-		case UP:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-				(*player).direction = direction;
-			break;
-		case DOWN:
-			if ((*player).direction == LEFT || (*player).direction == RIGHT)
-				(*player).direction = direction;
-			break;
-		case LEFT:
-			if ((*player).direction == UP || (*player).direction == DOWN)
-				(*player).direction = direction;
-			break;
-		case RIGHT:
-			if ((*player).direction == UP || (*player).direction == DOWN)
-				(*player).direction = direction;
-			break;
 	}
 }
 
