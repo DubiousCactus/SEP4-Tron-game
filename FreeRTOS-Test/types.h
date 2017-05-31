@@ -1,4 +1,6 @@
 #define MAXTURNS 14
+#define MAX_PAYLOAD_LENGTH 10
+#define MAX_TRAILER_LENGTH 10
 #define FLAG 0xFF
 #define ESCAPE 0xDD
 

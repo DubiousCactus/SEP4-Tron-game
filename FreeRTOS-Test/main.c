@@ -46,70 +46,93 @@ void communicate_serial(void *pvParameters)
 	//Variables
 	uint8_t data[] = {0};
 	ProtocolState state = IDLE;
+	int payload_length = 0;
+	int parsed_length = 0;
+	int parsed_trailer = 0;
+	int sequence_number = 0;
+	uint8_t payload[MAX_PAYLOAD_LENGTH] = {0};
+	uint8_t trailer[MAX_TRAILER_LENGTH] = {0};
+	uint8_t frame_validated = false;
 
 	_received_chars_queue = xQueueCreate(_COM_RX_QUEUE_LENGTH, (unsigned portBASE_TYPE) sizeof (uint8_t));
 	init_com(_received_chars_queue);
-
-		//if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
 		
 	for(;;){
 
-		switch(state) {
-			
-			case IDLE:
-				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
-				if (data[0] != FLAG)
-					state = error;
-				else
-					state = HEADER;
-				break;
-			case HEADER:
-				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
-				if (data[0] == ESCAPE) {
-					state = ESC;
-				} else if (data[0] == FLAG) {
-					state = ERROR;
-				} else if (data[0] == DOT) {
-					state = PAYLOAD;
-				} else if (data[0] == COMMA) {
-					//save length of payload
-				} else {
-				}
-				break;
-			case PAYLOAD:
-				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
-				if (data[0] == ESCAPE) {
-					state = ESC;
-				} else if (data[0] == FLAG) {
-					state = ERROR;
-				} else if (length_reached) {
-					state = TRAILER
-				} else {
-					save byte in payload
-				}
-				break;
-			case TRAILER:
-				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
-				if (data[0] == ESCAPE) {
-					state = ESC;
-				} else if (data[0] == FLAG) {
-					state = FRAME_VALIDATION;
-				} else {
-					save bytes  in trailer
-				}
-				break;
-			case ESC:
-				xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+		data[] = {0};
+		state = IDLE;
+		payload_length = 0;
+		parsed_length = 0;
+		parsed_trailer = 0;
+		sequence_number = 0;
+		payload[MAX_PAYLOAD_LENGTH] = {0};
+		trailer[MAX_TRAILER_LENGTH] = {0};
+		frame_validated = false;
+		
+		while (!frame_validated) {
+
+			switch(state) {
 				
-				break;
-			case ERROR:
+				case IDLE:
+					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+					if (data[0] != FLAG) {
+						state = error;
+					} else {
+						state = HEADER;
+					}
+					break;
+				case HEADER:
+					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+					if (data[0] == ESCAPE) {
+						state = ESC;
+					} else if (data[0] == FLAG) {
+						state = ERROR;
+					} else if (data[0] == DOT) {
+						state = PAYLOAD;
+					} else if (data[0] == COMMA) {
+						//save sequence number
+						sequence_number = data[0];	
+					} else {
+						//save payload length
+						payload_length = data[0];
+					}
+					break;
+				case PAYLOAD:
+					if (parsed_length++ < payload_length) {
+						xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+					} else if (data[0] == ESCAPE) {
+						state = ESC;
+					} else if (data[0] == FLAG) {
+						state = ERROR;
+					} else if (payload_length == 0) {
+						state = TRAILER;
+					} else {
+						payload[parsed_length] = data[0];
+					}
+					break;
+				case TRAILER:
+					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+					if (data[0] == ESCAPE) {
+						state = ESC;
+					} else if (data[0] == FLAG) {
+						state = FRAME_VALIDATION;
+					} else {
+						trailer[parsed_trailer++] = data[0];
+					}
+					break;
+				case ESC:
+					xQueueReceive(_received_chars_queue, &data, (TickType_t) 10);
+					
+					break;
+				case ERROR:
 
-				break;
-			case FRAME_VALIDATION:
-
-				break;
-			case default:
-				state = ERROR;
+					break;
+				case FRAME_VALIDATION:
+					frame_validated = true;
+					break;
+				case default:
+					state = ERROR;
+			}
 		}
 
 		vTaskDelay(20);
