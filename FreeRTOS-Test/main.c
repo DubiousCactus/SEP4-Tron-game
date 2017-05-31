@@ -56,15 +56,30 @@ void communicate_serial(void *pvParameters)
 		if (xQueueReceive(_received_chars_queue, &data, (TickType_t) 10)) {
 
 			switch (data[0]) {
-				case 0x41 : turn_player(&playerTwo, LEFT);	//A
-				case 0x61 : turn_player(&playerTwo, LEFT);	//a
-				case 0x57 : turn_player(&playerTwo, UP);		//W
-				case 0x77 : turn_player(&playerTwo, UP);		//w
-				case 0x44 : turn_player(&playerTwo, RIGHT);	//D
-				case 0x64 : turn_player(&playerTwo, RIGHT);	//d
-				case 0x53 : turn_player(&playerTwo, DOWN);	//S
-				case 0x73 : turn_player(&playerTwo, DOWN);	//s
-				default: com_send_bytes((uint8_t) data, 1);
+				case 0x41 :								
+					turn_player(&playerTwo, LEFT);		//A
+					break;
+				case 0x61 :								
+					turn_player(&playerTwo, LEFT);		//a
+					break;
+				case 0x57 :														
+					turn_player(&playerTwo, UP);		//W
+					break;
+				case 0x77 :
+					turn_player(&playerTwo, UP);		//w
+					break;
+				case 0x44 :
+					turn_player(&playerTwo, RIGHT);		//D
+					break;
+				case 0x64 :
+					turn_player(&playerTwo, RIGHT);		//d
+					break;
+				case 0x53 :
+					turn_player(&playerTwo, DOWN);		//S
+					break;
+				case 0x73 :
+					turn_player(&playerTwo, DOWN);		//s
+					break;
 			}
 		}
 
