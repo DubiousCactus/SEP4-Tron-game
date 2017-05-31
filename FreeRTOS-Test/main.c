@@ -85,17 +85,23 @@ void communicate_serial(void *pvParameters)
 /* TODO: protect frame_buffer with a mutex */
 void make_frame(void *pvParameters)
 {
-
 	for(;;) {
+		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+			for (int i = 0; i < 14; i++) { //For each column
+				frame_buffer[i]	= 0;
+			}
+		}
+
 		/* Create frame from gameState */
-		for (int i = 0; i < 14; i++) { //For each column
-			for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+		for (int j = 0; j < 10; j++) { //Cumulate bits of each line
+			for (int i = 0; i < 14; i++) { //For each column
 				if (gameState[i][j] != 0) { //Add up
-					frame_buffer[i]	+= pow(2, j);
+					frame_buffer[i]	+= (int) (pow(2,  j) + 0.5);
 				}
 			}
 		}
-		vTaskDelay(5);
+
+		vTaskDelay(50);
 	}
 
 	vTaskDelete(NULL);
@@ -141,11 +147,11 @@ void game_processing(void *pvParameters)
 
 	bool collision = false;
 
-	playerOne.x = 4;
-	playerOne.y = 4;
+	playerOne.x = 5;
+	playerOne.y = 5;
 	playerOne.direction = LEFT;
 	Turn turn0;
-	turn0.x = 5;
+	turn0.x = 12;
 	turn0.y = 5;
 	playerOne.turns[0] = turn0;
 
@@ -159,11 +165,11 @@ void game_processing(void *pvParameters)
 		while(!collision) {
 			
 			/* Erase player one */
-			for (int i = 0; i < 14; i++)
-				for (int j = 0; j < 10; j++)
-				if (gameState[i][j] == 1)
-					gameState[i][j] = 0;
-
+			/*for (int i = 0; i < 14; i++)
+			for (int j = 0; j < 10; j++)
+			if (gameState[i][j] == 1)
+			gameState[i][j] = 0;
+			*/
 			if ((sizeof(playerOne.turns) / sizeof(playerOne.turns[0])) < 2) { //Didn't turn yet !
 
 				if (playerOne.x == playerOne.turns[0].x) { //Vertical line
@@ -172,22 +178,22 @@ void game_processing(void *pvParameters)
 					for (int j = playerOne.y; j <= playerOne.turns[0].y; j++) {
 						if (gameState[playerOne.turns[0].x][j] == 2) { //Collision with player two !!
 							collision = 1;
-						} else {
+							} else {
 							gameState[playerOne.turns[0].x][j] = 1;
 						}
 					}
 
-				} else { //Horizontal line
+					} else if (playerOne.y == playerOne.turns[0].y) { //Horizontal line
 					
 					for (int j = playerOne.x; j <= playerOne.turns[0].x; j++) {
 						if (gameState[j][playerOne.turns[0].y] == 2) { //Collision with player two !!
 							collision = 1;
-						} else {
+							} else {
 							gameState[j][playerOne.turns[0].y] = 1;
 						}
 					}
 				}
-			} else {
+				} else {
 
 				/* Draw player one and check collisions with player two */
 				for (int i = 1; i < (sizeof(playerOne.turns) / sizeof(playerOne.turns[0])); i++) {
@@ -197,17 +203,17 @@ void game_processing(void *pvParameters)
 						for (int j = playerOne.turns[i - 1].y; j <= playerOne.turns[i].y; j++) {
 							if (gameState[playerOne.turns[i].x][j] == 2) { //Collision with player two !!
 								collision = 1;
-							} else {
+								} else {
 								gameState[playerOne.turns[i].x][j] = 1;
 							}
 						}
 
-					} else { //Horizontal line
+						} else { //Horizontal line
 						
 						for (int j = playerOne.turns[i - 1].x; j <= playerOne.turns[i].x; j++) {
 							if (gameState[j][playerOne.turns[i].y] == 2) { //Collision with player two !!
 								collision = 1;
-							} else {
+								} else {
 								gameState[j][playerOne.turns[i].y] = 1;
 							}
 						}
@@ -217,9 +223,9 @@ void game_processing(void *pvParameters)
 
 			/* Erase player two */
 			for (int i = 0; i < 14; i++)
-				for (int j = 0; j < 10; j++)
-					if (gameState[i][j] == 2)
-						gameState[i][j] = 0;
+			for (int j = 0; j < 10; j++)
+			if (gameState[i][j] == 2)
+			gameState[i][j] = 0;
 			//
 			//if ((sizeof(playerTwo.turns) / sizeof(playerTwo.turns[0])) < 2) { //Didn't turn yet !
 			//
@@ -285,7 +291,7 @@ void game_processing(void *pvParameters)
 			//}
 
 			/* Move players in their current direction */
-			move_player(playerOne);
+			//move_player(playerOne);
 			//move_player(playerTwo);
 
 			vTaskDelay(1000);
@@ -455,7 +461,7 @@ int main(void)
 	xPlayerTwoSemaphore = xSemaphoreCreateMutex();
 	xGameOverSemaphore = xSemaphoreCreateMutex();
 
-	//BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
+	BaseType_t taskReadJoystick = xTaskCreate(read_joystick, (const char*)"Read joystick", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskGameProcessing = xTaskCreate(game_processing, (const char*)"Game processing", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL);
 	BaseType_t taskMakeFrame = xTaskCreate(make_frame, (const char*)"Make frame", configMINIMAL_STACK_SIZE, (void *)NULL, tskIDLE_PRIORITY, NULL );
 
