@@ -176,7 +176,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
 					if ((playerId == 1 && gameState[(*player).turns[i].x][j] == 2)
-							|| (playerId == 2 && gameState[(*player).turns[i].x][j] == 1)) //Collision with player 2 !
+							|| (playerId == 2 && gameState[(*player).turns[i].x][j] == 1)) //Collision !
 						collision = true;
 					else
 						gameState[(*player).turns[i].x][j] = 1;
@@ -195,7 +195,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
 					if ((playerId == 1 && gameState[j][(*player).turns[i].y] == 2)
-						   || (playerId == 2 && gameState[j][(*player).turns[i].y] == 1)) //Collision with player 2 !
+						   || (playerId == 2 && gameState[j][(*player).turns[i].y] == 1)) //Collision !
 						collision = true;
 					else
 						gameState[j][(*player).turns[i].y] = 1;
@@ -218,7 +218,7 @@ uint8_t draw_players_lines(Player *player, int playerId)
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
 					if ((playerId == 1 && gameState[(*player).x][j] == 2)
-						   || (playerId == 2 && gameState[(*player).x][j] == 1)) //Collision with player 2 !
+						   || (playerId == 2 && gameState[(*player).x][j] == 1)) //Collision !
 						collision = true;
 					else
 						gameState[(*player).x][j] = 1;
@@ -236,7 +236,8 @@ uint8_t draw_players_lines(Player *player, int playerId)
 
 				//Draw line in gameState
 				for (int j = from; j <= to; j++) {
-					if ((playerId == 1 && gameState[j][(*player).y] == 2) || (playerId == 2 && gameState[j][(*player).y] == 1)) //Collision with player 2 !
+					if ((playerId == 1 && gameState[j][(*player).y] == 2)
+						   || (playerId == 2 && gameState[j][(*player).y] == 1) //Collision !
 						collision = true;
 					else
 						gameState[j][(*player).y] = 1;
@@ -256,19 +257,14 @@ void game_processing(void *pvParameters)
 	/* Populate gameState from the players' positions and tracks:
 	* Start at turn[i] to compare with turn[i - 1] for each player
 	*/
-	Player player;
+
 	bool collision = false;
 
 	for(;;) {
 
 		while(!collision) {
 			
-			for (int p = 0; p < 2; p++) {
-				if (p == 0)
-					player = playerOne;
-				else
-					player = playerTwo;
-
+			for (int p = 1; p <= 2; p++) {
 				/* Erase player */
 				for (int i = 0; i < 14; i++)
 					for (int j = 0; j < 10; j++)
@@ -276,15 +272,15 @@ void game_processing(void *pvParameters)
 							|| (p == 1 && gameState[i][j] == 2))
 								gameState[i][j] = 0;
 
-				collision = draw_players_lines(&player, p + 1);
 
 				/* Move players in their current direction */
-				move_player(&player);
-
-				if (p == 0)
-					playerOne = player;
-				else
-					playerTwo = player;
+				if (p == 1) {
+					collision = draw_players_lines(&playerOne, p);
+					move_player(&playerOne);
+				} else {
+					collision = draw_players_lines(&playerTwo, p);
+					move_player(&playerTwo);
+				}
 			}
 
 			vTaskDelay(1000);
