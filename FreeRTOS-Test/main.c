@@ -153,6 +153,98 @@ void move_player(Player* player)
 	//TODO: Figure out the front collision detection and death mechanism
 }
 
+void draw_players_lines(Player *player)
+{
+	
+	for (int i = 0; i < (*player).turnsCount + 1; i++) {
+
+		if (i < (*player).turnsCount) { //Processing every turn
+
+			if ((*player).turns[i].x == (*player).turns[i + 1].x) { //Draw vertical line
+
+				from = (*player).turns[i].y;
+				to = (*player).turns[i + 1].y;
+
+				if (from > to) {
+					to = from;
+					from = (*player).turns[i + 1].y;
+				}
+
+				//Draw line in gameState
+				for (int j = from; j <= to; j++) {
+					if ((player == playerOne && gameState[(*player).turns[i].x][j] == 2)
+							|| (player == playerTwo && gameState[(*player).turns[i].x][j] == 1)) //Collision with player 2 !
+						collision = true;
+					else
+						gameState[(*player).turns[i].x][j] = 1;
+				}
+
+			} else if ((*player).turns[i].y == (*player).turns[i + 1].y) { //Draw horizontal line
+
+				from = (*player).turns[i].x;
+				to = (*player).turns[i + 1].x;
+
+				if (from > to) {
+					to = from;
+					from = (*player).turns[i + 1].x;
+				}
+
+				//Draw line in gameState
+				for (int j = from; j <= to; j++) {
+					if ((player == playerOne && gameState[j][(*player).turns[i].y] == 2)
+						   || (player == playerTwo && gameState[j][(*player).turns[i].y] == 1)) //Collision with player 2 !
+						collision = true;
+					else
+						gameState[j][(*player).turns[i].y] = 1;
+				}
+
+			}
+
+		} else { //Processing the current position
+
+			if ((*player).turns[i].x == (*player).x) { //Draw vertical line
+
+				from = (*player).turns[i].y;
+				to = (*player).y;
+
+				if (from > to) {
+					to = from;
+					from = (*player).y;
+				}
+
+				//Draw line in gameState
+				for (int j = from; j <= to; j++) {
+					if ((player == playerOne && gameState[(*player).x][j] == 2)
+						   || (player == playerTwp && gameState[(*player).x][j] == 1)) //Collision with player 2 !
+						collision = true;
+					else
+						gameState[(*player).x][j] = 1;
+				}
+
+			} else if ((*player).turns[i].y == (*player).y) { //Draw horizontal line
+
+				from = (*player).turns[i].x;
+				to = (*player).x;
+
+				if (from > to) {
+					to = from;
+					from = (*player).x;
+				}
+
+				//Draw line in gameState
+				for (int j = from; j <= to; j++) {
+					if ((player == playerOne && gameState[j][(*player).y] == 2)
+						   || (player == playerTwo && gameState[j][(*player).y] == 1) //Collision with player 2 !
+						collision = true;
+					else
+						gameState[j][(*player).y] = 1;
+				}
+
+			}
+
+		}
+	}
+}
 
 /* TODO: protect gameState with a mutex */
 void game_processing(void *pvParameters)
@@ -168,99 +260,22 @@ void game_processing(void *pvParameters)
 
 		while(!collision) {
 			
-			/* Erase player one */
-			for (int i = 0; i < 14; i++)
-				for (int j = 0; j < 10; j++)
-					if (gameState[i][j] == 1)
-						gameState[i][j] = 0;
-	
-			for (int i = 0; i < playerOne.turnsCount + 1; i++) {
+			for (int p = 0; p < 2; p++) {
+				if (p == 0)
+					player = playerOne;
+				else
+					player = playerTwo;
 
-				if (i < playerOne.turnsCount) { //Processing every turn
+				/* Erase player */
+				for (int i = 0; i < 14; i++)
+					for (int j = 0; j < 10; j++)
+						if ((player == playerOne && gameState[i][j] == 1)
+							|| (player == playerTwo && gameState[i][j] == 2))
+								gameState[i][j] = 0;
 
-					if (playerOne.turns[i].x == playerOne.turns[i + 1].x) { //Draw vertical line
-
-						from = playerOne.turns[i].y;
-						to = playerOne.turns[i + 1].y;
-
-						if (from > to) {
-							to = from;
-							from = playerOne.turns[i + 1].y;
-						}
-
-						//Draw line in gameState
-						for (int j = from; j <= to; j++) {
-							if (gameState[playerOne.turns[i].x][j] == 2) //Collision with player 2 !
-								collision = true;
-							else
-								gameState[playerOne.turns[i].x][j] = 1;
-						}
-
-					} else if (playerOne.turns[i].y == playerOne.turns[i + 1].y) { //Draw horizontal line
-
-						from = playerOne.turns[i].x;
-						to = playerOne.turns[i + 1].x;
-
-						if (from > to) {
-							to = from;
-							from = playerOne.turns[i + 1].x;
-						}
-
-						//Draw line in gameState
-						for (int j = from; j <= to; j++) {
-							if (gameState[j][playerOne.turns[i].y] == 2) //Collision with player 2 !
-								collision = true;
-							else
-								gameState[j][playerOne.turns[i].y] = 1;
-						}
-
-					}
-
-				} else { //Processing the current position
-
-					if (playerOne.turns[i].x == playerOne.x) { //Draw vertical line
-
-						from = playerOne.turns[i].y;
-						to = playerOne.y;
-
-						if (from > to) {
-							to = from;
-							from = playerOne.y;
-						}
-
-						//Draw line in gameState
-						for (int j = from; j <= to; j++) {
-							if (gameState[playerOne.x][j] == 2) //Collision with player 2 !
-								collision = true;
-							else
-								gameState[playerOne.x][j] = 1;
-						}
-
-					} else if (playerOne.turns[i].y == playerOne.y) { //Draw horizontal line
-
-						from = playerOne.turns[i].x;
-						to = playerOne.x;
-
-						if (from > to) {
-							to = from;
-							from = playerOne.x;
-						}
-
-						//Draw line in gameState
-						for (int j = from; j <= to; j++) {
-							if (gameState[j][playerOne.y] == 2) //Collision with player 2 !
-								collision = true;
-							else
-								gameState[j][playerOne.y] = 1;
-						}
-
-					}
-
-				}
+				/* Move players in their current direction */
+				move_player(&player);
 			}
-
-			/* Move players in their current direction */
-			move_player(&playerOne);
 
 			vTaskDelay(1000);
 		}
