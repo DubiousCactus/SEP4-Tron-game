@@ -342,7 +342,7 @@ void turn_player(Player *player, Direction direction)
 	if ((*player).direction != direction) { //New turn !
 		(*player).turnsCount++;
 
-		if ((*player).turnsCount < MAXTURNS && (*player).turns[(*player).turnsCount] == -1) { //Free turn slot
+		if ((*player).turnsCount < MAXTURNS && (*player).turns[(*player).turnsCount].x == -1) { //Free turn slot
 			(*player).turns[(*player).turnsCount].x = (*player).x;
 			(*player).turns[(*player).turnsCount].y = (*player).y;
 		} else {
@@ -375,8 +375,10 @@ void init_players()
 {
 
 	for (int i = 0; i < MAXTURNS + 1; i++) {
-		playerOne.turns[i] = -1;
-		playerTwo.turns[i] = -1;
+		playerOne.turns[i].x = -1;
+		playerOne.turns[i].y = -1;
+		playerTwo.turns[i].x = -1;
+		playerTwo.turns[i].y = -1;
 	}
 
 	playerOne.turnsCount = 0;
